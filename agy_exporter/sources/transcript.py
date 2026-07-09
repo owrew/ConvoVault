@@ -8,7 +8,7 @@ import json
 import logging
 import os
 import re
-from typing import Iterator, List, Optional
+from typing import Any, Iterator, List, Optional
 from ..models import Step, ToolCall, ConversationTranscript
 
 log = logging.getLogger(__name__)
@@ -103,14 +103,39 @@ def get_transcript_mtime(brain_dir: str, conv_id: str) -> Optional[float]:
             pass
     return None
 
-_WRAPPER_TAGS = re.compile(
-    r'</?(?:USER_REQUEST|ADDITIONAL_METADATA|USER_SETTINGS_CHANGE|SYSTEM_REMINDERS)[^>]*>',
-    re.IGNORECASE
+# ── Tag stripping ────────────────────────────────────────────────────────────
+
+# Blocks that are purely system-injected metadata — strip tag + content entirely.
+_SYSTEM_ONLY_BLOCKS = re.compile(
+    r'<(?:ADDITIONAL_METADATA|USER_SETTINGS_CHANGE|SYSTEM_REMINDERS|SYSTEM_MESSAGE)'
+    r'[^>]*>.*?</(?:ADDITIONAL_METADATA|USER_SETTINGS_CHANGE|SYSTEM_REMINDERS|SYSTEM_MESSAGE)>',
+    re.IGNORECASE | re.DOTALL,
+)
+
+# Wrapper tags whose *content* belongs to the user — strip the tag, keep the text.
+_WRAPPER_ONLY_TAGS = re.compile(
+    r'</?(?:USER_REQUEST)[^>]*>',
+    re.IGNORECASE,
 )
 
 def clean_user_content(raw: str) -> str:
-    # Strip the purely wrapper tags themselves, preserving all inner text, XML, and file references
-    return _WRAPPER_TAGS.sub('', raw).strip()
+    """
+    Clean a USER_INPUT step's content for display in the exported note.
+
+    Strategy:
+      1. Remove system-injected blocks entirely (ADDITIONAL_METADATA, etc.).
+      2. Strip pure-wrapper tags from USER_REQUEST (keep the inner text).
+      3. Collapse excess blank lines.
+    """
+    if not raw:
+        return ""
+    # 1. Remove system-only blocks (tag + content)
+    text = _SYSTEM_ONLY_BLOCKS.sub('', raw)
+    # 2. Strip wrapper-only tags (preserve inner content)
+    text = _WRAPPER_ONLY_TAGS.sub('', text)
+    # 3. Collapse 3+ consecutive blank lines to 2
+    text = re.sub(r'\n{3,}', '\n\n', text)
+    return text.strip()
 
 def extract_first_user_message(transcript: ConversationTranscript) -> str:
     for step in transcript.steps:
