@@ -58,6 +58,16 @@ _TECH_STACK = {
     "Express.js": r"\bExpress\b",
     "FastAPI": r"\bFastAPI\b",
     "Django": r"\bDjango\b",
+    "Claude": r"\bClaude\b",
+    "Codex": r"\bCodex\b",
+    "Qwen": r"\bQwen\b",
+    "Z AI": r"\bZ\s*AI\b|\bZAI\b",
+    "Ollama": r"\bOllama\b",
+    "DeepSeek": r"\bDeepSeek\b",
+    "Llama": r"\bLlama\b",
+    "Mistral": r"\bMistral\b",
+    "Gemma": r"\bGemma\b",
+    "Local AI": r"\blocal\s*AI\b",
 }
 
 _TOPIC_PATTERNS = {
@@ -226,7 +236,7 @@ def generate_intelligence(transcript: ConversationTranscript) -> ConversationInt
     commands = _extract_commands(steps)
     
     # 5. Languages
-    languages = list(_extract_languages(steps))
+    languages = sorted(list(_extract_languages(steps)))
     
     # 6. Summary
     summary = _generate_summary(transcript.conv_id, steps)

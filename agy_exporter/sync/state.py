@@ -51,9 +51,11 @@ class ExportState:
             return True
 
         if entry.get('content_hash') != content_hash:
+            log.debug("Hash mismatch for %s: local=%s, incoming=%s", conv_id[:8], entry.get('content_hash'), content_hash)
             return True
             
         if mtime is not None and entry.get('source_mtime') != mtime:
+            log.debug("Mtime mismatch for %s: local=%s, incoming=%s", conv_id[:8], entry.get('source_mtime'), mtime)
             return True
 
         return False

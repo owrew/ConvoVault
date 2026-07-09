@@ -18,7 +18,8 @@ class ExporterConfig:
     debug: bool = False
     conv_filter: Optional[List[str]] = None
     no_tool_results: bool = False
-    max_tool_results_per_turn: int = 5
+    max_tool_results_per_turn: Optional[int] = None  # None = unlimited
+    max_tool_output_length: Optional[int] = None     # None = unlimited
     verbose: bool = False
     
     # Internal paths derived from source_dir and vault_dir

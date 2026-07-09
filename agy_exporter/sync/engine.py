@@ -88,8 +88,7 @@ def export_one(
             transcript=transcript,
             meta=meta,
             all_meta=all_meta,
-            no_tool_results=config.no_tool_results,
-            max_tool_results_per_turn=config.max_tool_results_per_turn
+            config=config
         )
     except Exception as e:
         log.error("Formatting failed for %s: %s", conv_id, e)
@@ -191,6 +190,16 @@ def run_export(config: ExporterConfig) -> dict:
         except Exception as e:
             log.error("Failed loading conversation %s: %s", cid, e, exc_info=True)
             stats['failed'] += 1
+
+    # 3b. Eagerly load annotations for all conversations so last_viewed is always
+    #     populated before any rendering — this keeps content hashes stable across runs.
+    for cid in conv_ids:
+        meta = meta_index.get(cid)
+        if meta and not meta.last_viewed_at:
+            annot_path = os.path.join(config.annotations_dir, cid + ".pbtxt")
+            last_view = parse_annotation(annot_path)
+            if last_view:
+                meta.last_viewed_at = last_view
 
     # 4. Cross-link relations
     find_relations(transcripts)

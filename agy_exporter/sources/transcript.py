@@ -103,24 +103,14 @@ def get_transcript_mtime(brain_dir: str, conv_id: str) -> Optional[float]:
             pass
     return None
 
-_STRIP_TAGS = re.compile(
-    r'<(?:USER_REQUEST|ADDITIONAL_METADATA|USER_SETTINGS_CHANGE|SYSTEM_REMINDERS)'
-    r'[^>]*>.*?</(?:USER_REQUEST|ADDITIONAL_METADATA|USER_SETTINGS_CHANGE|SYSTEM_REMINDERS)>',
-    re.DOTALL,
-)
-_MENTIONED_FILES = re.compile(
-    r'@\[([^\]]+)\] is a \[(?:File|Directory)\]:[^\n]*\n?', re.DOTALL
+_WRAPPER_TAGS = re.compile(
+    r'</?(?:USER_REQUEST|ADDITIONAL_METADATA|USER_SETTINGS_CHANGE|SYSTEM_REMINDERS)[^>]*>',
+    re.IGNORECASE
 )
 
 def clean_user_content(raw: str) -> str:
-    m = re.search(r'<USER_REQUEST>(.*?)</USER_REQUEST>', raw, re.DOTALL)
-    if m:
-        raw = m.group(1).strip()
-    else:
-        raw = _STRIP_TAGS.sub('', raw).strip()
-
-    raw = _MENTIONED_FILES.sub('', raw).strip()
-    return raw
+    # Strip the purely wrapper tags themselves, preserving all inner text, XML, and file references
+    return _WRAPPER_TAGS.sub('', raw).strip()
 
 def extract_first_user_message(transcript: ConversationTranscript) -> str:
     for step in transcript.steps:

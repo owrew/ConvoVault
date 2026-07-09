@@ -8,6 +8,7 @@ import re
 from datetime import datetime, timezone
 from typing import List, Dict, Optional
 from ..models import ConversationTranscript, ConversationMeta, Step, Turn
+from ..config import ExporterConfig
 from ..sources.transcript import clean_user_content, get_date_range, TOOL_RESULT_TYPES, TYPE_USER_INPUT, TYPE_PLANNER_RESPONSE
 from ..analysis.wikilinks import extract_topics, title_to_filename
 from .mermaid import generate_mermaid_diagram
@@ -32,7 +33,14 @@ def _clean_planner_content(text: str) -> str:
     text = re.sub(r'\n{3,}', '\n\n', text)
     return text.strip()
 
-def _format_tool_call(tool_call) -> str:
+def _safe_code_block(content: str, language: str = "") -> str:
+    max_backticks = 0
+    for match in re.finditer(r'`+', content):
+        max_backticks = max(max_backticks, len(match.group(0)))
+    fence = '`' * max(max_backticks + 1, 3)
+    return f"{fence}{language}\n{content}\n{fence}"
+
+def _format_tool_call(tool_call, max_len: Optional[int] = None) -> str:
     name = tool_call.name
     summary = tool_call.tool_summary or tool_call.tool_action or ""
     args = tool_call.args or {}
@@ -43,8 +51,8 @@ def _format_tool_call(tool_call) -> str:
         if k in skip_keys:
             continue
         val_str = str(v)
-        if len(val_str) > 200:
-            val_str = val_str[:200] + '…'
+        if max_len is not None and max_len > 0 and len(val_str) > max_len:
+            val_str = val_str[:max_len] + '…'
         arg_lines.append(f"  - **{k}:** `{val_str}`")
 
     header = f"🔧 **`{name}`**"
@@ -57,7 +65,13 @@ def _format_tool_call(tool_call) -> str:
 
     return '\n'.join(parts)
 
-def _format_step(step: Step, config_no_tool_results: bool, max_results: int, result_counter: List[int]) -> str:
+def _format_step(
+    step: Step,
+    config_no_tool_results: bool,
+    max_results: Optional[int],
+    result_counter: List[int],
+    max_tool_output_length: Optional[int] = None
+) -> str:
     parts: List[str] = []
 
     if step.step_type == TYPE_USER_INPUT:
@@ -80,32 +94,36 @@ def _format_step(step: Step, config_no_tool_results: bool, max_results: int, res
             parts.append(content)
 
         if step.tool_calls:
-            tc_blocks = [_format_tool_call(tc) for tc in step.tool_calls]
+            tc_blocks = [_format_tool_call(tc, max_tool_output_length) for tc in step.tool_calls]
             parts.append('\n'.join(tc_blocks))
 
     elif step.step_type in TOOL_RESULT_TYPES:
         if not config_no_tool_results:
-            if result_counter[0] < max_results:
+            is_unlimited = (max_results is None or max_results <= 0)
+            if is_unlimited or result_counter[0] < max_results:
                 result_counter[0] += 1
                 content = step.content or ""
                 if content:
-                    max_chars = 3000
-                    truncated = len(content) > max_chars
-                    display = content[:max_chars] + ('\n\n*[output truncated…]*' if truncated else '')
+                    if max_tool_output_length is not None and max_tool_output_length > 0:
+                        truncated = len(content) > max_tool_output_length
+                        display = content[:max_tool_output_length] + (f'\n\n*[output truncated at {max_tool_output_length} chars…]*' if truncated else '')
+                    else:
+                        display = content
+                    code_block = _safe_code_block(display)
                     parts.append(
                         f"<details>\n"
                         f"<summary>📄 Tool result: <code>{step.step_type}</code></summary>\n\n"
-                        f"```\n{display}\n```\n"
+                        f"{code_block}\n"
                         f"</details>"
                     )
-            elif result_counter[0] == max_results:
+            elif not is_unlimited and result_counter[0] == max_results:
                 result_counter[0] += 1
                 parts.append("*[remaining tool results omitted from this turn]*")
 
     elif step.step_type.startswith('UNKNOWN_') or step.step_type == 'ERROR':
         content = step.content or ""
         if content:
-            parts.append(f"> ⚠️ *{step.step_type}*\n>\n> {content[:500]}")
+            parts.append(f"> ⚠️ *{step.step_type}*\n>\n> {content}")
 
     return '\n\n'.join(p for p in parts if p)
 
@@ -144,8 +162,15 @@ def format_conversation(
     meta: Optional[ConversationMeta],
     all_meta: Dict[str, ConversationMeta],
     no_tool_results: bool = False,
-    max_tool_results_per_turn: int = 5,
+    max_tool_results_per_turn: Optional[int] = None,
+    max_tool_output_length: Optional[int] = None,
+    config: Optional[ExporterConfig] = None,
 ) -> str:
+    if config is not None:
+        no_tool_results = config.no_tool_results
+        max_tool_results_per_turn = config.max_tool_results_per_turn
+        max_tool_output_length = config.max_tool_output_length
+
     conv_id = transcript.conv_id
     steps = transcript.steps
 
@@ -234,7 +259,7 @@ aliases:
 
         result_counter = [0]
         for step in turn.steps:
-            formatted = _format_step(step, no_tool_results, max_tool_results_per_turn, result_counter)
+            formatted = _format_step(step, no_tool_results, max_tool_results_per_turn, result_counter, max_tool_output_length)
             if formatted:
                 body.append(formatted + "\n")
 

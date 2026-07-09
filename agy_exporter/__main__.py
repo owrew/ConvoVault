@@ -57,6 +57,8 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--debug", "-d", action="store_true", help="Dump error details to .agy_debug/ on failure")
     p.add_argument("--conv", "-c", nargs="+", default=None, help="Filter to export specific conversation IDs")
     p.add_argument("--no-tool-results", action="store_true", help="Exclude tool result files and terminal outputs")
+    p.add_argument("--max-tool-results-per-turn", type=int, default=None, help="Maximum number of tool result blocks per turn (default: unlimited)")
+    p.add_argument("--max-tool-output-length", type=int, default=None, help="Maximum character length for each tool output block (default: unlimited)")
     p.add_argument("--verbose", "-V", action="store_true", help="Show verbose logs")
     p.add_argument("--list", action="store_true", help="Print conversation catalog with steps and titles")
     return p
@@ -80,6 +82,8 @@ def main(argv=None):
         debug=args.debug,
         conv_filter=args.conv,
         no_tool_results=args.no_tool_results,
+        max_tool_results_per_turn=args.max_tool_results_per_turn,
+        max_tool_output_length=args.max_tool_output_length,
         verbose=args.verbose
     )
 

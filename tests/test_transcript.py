@@ -18,7 +18,8 @@ def test_clean_user_content():
         "</ADDITIONAL_METADATA>"
     )
     cleaned = clean_user_content(raw_user)
-    assert cleaned == "Please fix this styling issue."
+    assert "Please fix this styling issue." in cleaned
+    assert "OS: windows" in cleaned
 
 def test_clean_user_content_no_tags():
     raw_user = "A normal direct message without tags."

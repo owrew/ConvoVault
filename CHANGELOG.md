@@ -6,6 +6,37 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and 
 
 ---
 
+## [Unreleased]
+
+### Added
+- **Full content preservation** — every user message, assistant response, thinking block, tool call, tool output, terminal output, and file content is now included in full by default (no truncation unless explicitly configured)
+- `max_tool_output_length` config option and `--max-tool-output-length` CLI flag — set a character limit per tool output block (default: unlimited)
+- `max_tool_results_per_turn` now defaults to `None` (unlimited) instead of 5
+- `--max-tool-results-per-turn` CLI flag to cap blocks per turn if desired
+- `_safe_code_block()` helper — uses adaptive fence length to prevent backtick collisions inside tool outputs
+- AI model recognition patterns: **Codex, Qwen, Z AI, Ollama, DeepSeek, Llama, Mistral, Gemma, Local AI** — now tagged and wiki-linked in exported notes
+- Eager annotation loading in `run_export` (before rendering) for deterministic `last_viewed` timestamps
+- Sorted code language list to prevent set-ordering non-determinism across process runs
+
+### Changed
+- `clean_user_content()` now **preserves all content inside wrapper tags** (`USER_REQUEST`, `ADDITIONAL_METADATA`, etc.) instead of stripping them — no information is discarded
+- Error/unknown step content is no longer truncated at 500 chars — full content is preserved
+- `format_conversation()` now accepts a `config=` parameter for one-call configuration
+- `_format_tool_call()` respects `max_tool_output_length` for argument display
+- `engine.py` passes full `config` object to `format_conversation` instead of individual flags
+
+### Fixed
+- **Idempotency fully resolved** — two consecutive runs now correctly produce `Written=0 Skipped=12` after a force rebuild (was intermittently re-writing 4–6 files on every run)
+- Root cause: `last_viewed_at` was loaded inside `export_one` (only for changed notes) causing the stored hash to not match on the next run for those notes
+- Set hash randomization (`PYTHONHASHSEED`) causing non-deterministic `code_languages` list ordering — fixed by sorting
+
+---
+
+
+The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+---
+
 ## [2.0.0] — 2026-07-09
 
 ### Added
