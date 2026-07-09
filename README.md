@@ -1,7 +1,7 @@
 <div align="center">
 
 <a href="https://github.com/owrew/antigravity-obsidian-exporter">
-  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=22&pause=1000&color=6366F1&center=true&vCenter=true&multiline=true&width=600&height=80&lines=Built+with+%E2%9D%A4%EF%B8%8F+by+Owais+Ali;Reverse+Engineering+%E2%80%A2+Obsidian+%E2%80%A2+Python+%E2%80%A2+Automation" alt="Typing SVG" />
+  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=24&pause=1200&color=6366F1&center=true&vCenter=true&multiline=true&width=700&height=120&lines=Built+with+%E2%9D%A4%EF%B8%8F+by+Owais+Ali;Reverse+Engineering+%E2%80%A2+Obsidian+%E2%80%A2+Python+%E2%80%A2+Automation" alt="Typing SVG" />
 </a>
 
 <br/>
@@ -343,6 +343,8 @@ agy-exporter \
 | `--debug` | `-d` | Write decode-error blobs to `.agy_debug/` |
 | `--conv UUID…` | `-c` | Filter to specific conversation UUID(s) |
 | `--no-tool-results` | | Omit tool output blocks (shorter notes) |
+| `--max-tool-results-per-turn NUM` | | Max tool results to show per turn (default: unlimited) |
+| `--max-tool-output-length CHARS` | | Max character length of tool output blocks (default: unlimited) |
 | `--list` | | Print conversation catalog and exit |
 | `--verbose` | `-V` | Enable DEBUG-level logging |
 
