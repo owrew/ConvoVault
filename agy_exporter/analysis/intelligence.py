@@ -162,56 +162,95 @@ def _extract_languages(steps: List[Step]) -> Set[str]:
     return langs
 
 def _generate_summary(conv_id: str, steps: List[Step]) -> str:
-    """Generates a high-quality human-readable conversation summary."""
-    user_requests = []
-    actions = []
-    errors = []
+    """
+    Generates a detailed, multi-paragraph human-readable conversation summary.
+    Includes all user requests, tool usage statistics, and any errors encountered.
+    """
+    from ..sources.transcript import clean_user_content  # local import to avoid circular
+
+    user_requests: List[str] = []
+    tool_actions: List[str] = []
+    tool_name_counts: dict = {}
+    errors: List[str] = []
+    files_written: List[str] = []
+    commands_run: List[str] = []
 
     for step in steps:
         if step.step_type == "USER_INPUT" and step.content:
-            # Strip tags and collect first lines
-            clean = step.content
-            # Remove metadata
-            m = re.search(r'<USER_REQUEST>(.*?)</USER_REQUEST>', clean, re.DOTALL)
-            if m:
-                clean = m.group(1).strip()
+            clean = clean_user_content(step.content)
             first_line = clean.split('\n')[0].strip()
-            if len(first_line) > 10:
+            if len(first_line) > 6:
                 user_requests.append(first_line)
-        
-        # Tools used
+
         for tc in step.tool_calls:
+            # Track by name for counts
+            tool_name_counts[tc.name] = tool_name_counts.get(tc.name, 0) + 1
             summary = tc.tool_summary or tc.tool_action
             if summary:
-                actions.append(summary.strip())
-            else:
-                actions.append(f"Invoked tool {tc.name}")
-        
+                tool_actions.append(summary.strip())
+            # Track file writes
+            if tc.name in ("write_to_file", "replace_file_content", "multi_replace_file_content"):
+                path = tc.args.get("TargetFile") or tc.args.get("path", "")
+                if path:
+                    files_written.append(os.path.basename(str(path)))
+            # Track commands run
+            if tc.name == "run_command":
+                cmd = tc.args.get("CommandLine") or tc.args.get("command", "")
+                if cmd:
+                    commands_run.append(str(cmd).strip()[:80])
+
         if step.step_type == "ERROR" and step.content:
             errors.append(step.content.split('\n')[0].strip())
 
-    # Formulate summary
-    parts = []
+    parts: List[str] = []
+
+    # 1. User requests section
     if user_requests:
-        req = user_requests[0]
-        if not req.endswith(('.', '?', '!')):
-            req += '.'
-        parts.append(f"The user requested to: {req}")
-    
-    unique_actions = list(dict.fromkeys(actions))
-    if unique_actions:
-        action_desc = ", and ".join(unique_actions[:3])
-        if len(unique_actions) > 3:
-            action_desc += f", among other actions"
-        parts.append(f"During execution, the assistant worked on {action_desc.lower()}.")
-    
+        if len(user_requests) == 1:
+            req = user_requests[0]
+            if not req.endswith(('.', '?', '!')):
+                req += '.'
+            parts.append(f"**User request:** {req}")
+        else:
+            req_list = "\n".join(f"  {i+1}. {r}" for i, r in enumerate(user_requests[:10]))
+            if len(user_requests) > 10:
+                req_list += f"\n  … and {len(user_requests) - 10} more"
+            parts.append(f"**User requests ({len(user_requests)} total):**\n{req_list}")
+
+    # 2. Tool usage breakdown
+    if tool_name_counts:
+        total_calls = sum(tool_name_counts.values())
+        top_tools = sorted(tool_name_counts.items(), key=lambda x: -x[1])[:8]
+        tool_str = ", ".join(f"`{name}` ×{count}" for name, count in top_tools)
+        if len(tool_name_counts) > 8:
+            tool_str += f", …+{len(tool_name_counts)-8} more"
+        parts.append(f"**Tool calls:** {total_calls} total — {tool_str}")
+
+    # 3. Files written
+    if files_written:
+        unique_files = list(dict.fromkeys(files_written))[:12]
+        parts.append(f"**Files written/edited:** {', '.join(f'`{f}`' for f in unique_files)}")
+
+    # 4. Commands run
+    if commands_run:
+        unique_cmds = list(dict.fromkeys(commands_run))[:5]
+        cmd_preview = "; ".join(f"`{c}`" for c in unique_cmds)
+        if len(commands_run) > 5:
+            cmd_preview += f" … +{len(commands_run) - 5} more"
+        parts.append(f"**Commands executed:** {cmd_preview}")
+
+    # 5. Errors encountered
     if errors:
-        parts.append(f"Encountered issue(s): {errors[0]}.")
+        err_list = "; ".join(errors[:3])
+        if len(errors) > 3:
+            err_list += f" … +{len(errors)-3} more"
+        parts.append(f"**Issues encountered:** {err_list}")
 
     if not parts:
         return "No significant actions or messages recorded in this conversation."
 
-    return " ".join(parts)
+    return "\n\n".join(parts)
+
 
 def generate_intelligence(transcript: ConversationTranscript) -> ConversationIntelligence:
     steps = transcript.steps
