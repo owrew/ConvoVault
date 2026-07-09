@@ -252,27 +252,119 @@ pip install watchdog
 
 ## Quick Start
 
-### 1. Find your Antigravity workspace
-
-Your Antigravity workspace is the folder that contains `brain/` and `conversations/` subdirectories. On Windows this is typically somewhere like:
-
-```
-C:\Users\<you>\...\OBS\
-```
-
-### 2. Run the exporter
+### Step 1 — Clone the repo
 
 ```bash
-# From inside your workspace folder:
-python -m agy_exporter
-
-# Or specify paths explicitly:
-agy-exporter --source /path/to/workspace --vault /path/to/obsidian-vault
+git clone https://github.com/owrew/antigravity-obsidian-exporter.git
+cd antigravity-obsidian-exporter
 ```
 
-### 3. Open in Obsidian
+### Step 2 — Find your Antigravity workspace
 
-Point Obsidian at your vault folder. Your notes will appear under **AI Vault → Chats**.
+Your workspace is the folder containing both a `brain/` subdirectory and a `conversations/` subdirectory.  
+**The exporter auto-detects it** — it scans these locations in order:
+
+| Priority | Path checked |
+|---|---|
+| 1 | Current working directory |
+| 2 | `~/OneDrive/Downloads/OBS` |
+| 3 | `~/OneDrive/Documents/OBS` |
+| 4 | `~/Downloads/OBS` |
+| 5 | `~/Documents/OBS` |
+| 6 | `~/Desktop/OBS` |
+| 7 | `~/Library/Application Support/Antigravity` *(macOS)* |
+| 8 | `~/.antigravity` / `~/.config/antigravity` *(Linux)* |
+
+### Step 3 — Save your paths permanently
+
+Run once to lock in your source and vault paths — you'll never need to type them again:
+
+```bash
+python -m agy_exporter \
+  --source "C:\Users\you\OneDrive\Downloads\OBS" \
+  --vault  "C:\Users\you\Documents\ObsidianVault" \
+  --save-config
+```
+
+This writes to `%APPDATA%\agy_exporter\config.json` (Windows) or `~/.config/agy_exporter/config.json` (macOS/Linux).
+
+> **After `--save-config`, you just run `python -m agy_exporter` with no arguments every time.**
+
+### Step 4 — Verify setup
+
+```bash
+python -m agy_exporter --show-config
+```
+
+```
+=== Antigravity Obsidian Exporter - Active Configuration ===
+
+  Config file : C:\Users\you\AppData\Roaming\agy_exporter\config.json
+  Source dir  : C:\Users\you\OneDrive\Downloads\OBS
+    brain/    : [OK] found
+    convo/    : [OK] found
+    summ.pb   : [OK] found
+  Vault dir   : C:\Users\you\Documents\ObsidianVault
+  Output dir  : C:\Users\you\Documents\ObsidianVault\AI Vault\Chats
+```
+
+### Step 5 — Export
+
+```bash
+python -m agy_exporter
+```
+
+Open your vault in Obsidian — notes appear under **AI Vault → Chats**.
+
+---
+
+## Configuration
+
+Configuration is resolved in this priority order (highest wins):
+
+```
+1. CLI flags           --source / --vault
+2. Environment vars    AGY_SOURCE / AGY_VAULT
+3. Config file         %APPDATA%\agy_exporter\config.json
+4. Auto-detection      scans common Antigravity install paths
+```
+
+### Option A — Config file (recommended)
+
+```bash
+python -m agy_exporter --source PATH --vault PATH --save-config
+```
+
+The saved config is a simple JSON file you can edit manually:
+
+```json
+{
+  "source": "C:\\Users\\you\\OneDrive\\Downloads\\OBS",
+  "vault":  "C:\\Users\\you\\Documents\\MyVault"
+}
+```
+
+### Option B — Environment variables
+
+Set once in your shell profile (`~/.bashrc`, `~/.zshrc`, PowerShell `$PROFILE`):
+
+```bash
+# macOS / Linux
+export AGY_SOURCE="$HOME/antigravity"
+export AGY_VAULT="$HOME/Documents/ObsidianVault"
+
+# Windows PowerShell
+$env:AGY_SOURCE = "C:\Users\you\OneDrive\Downloads\OBS"
+$env:AGY_VAULT  = "C:\Users\you\Documents\ObsidianVault"
+```
+
+### Option C — Pass paths directly every run
+
+```bash
+python -m agy_exporter \
+  --source "C:\Users\you\OneDrive\Downloads\OBS" \
+  --vault  "C:\Users\you\Documents\ObsidianVault"
+```
 
 ---
 
@@ -284,7 +376,29 @@ Point Obsidian at your vault folder. Your notes will appear under **AI Vault →
 python -m agy_exporter
 ```
 
-Discovers all conversations, exports only those that changed since the last run.
+Exports only conversations that changed since the last run (SHA-256 hash + mtime check).
+
+### Continuous sync — watch mode
+
+```bash
+python -m agy_exporter --watch
+```
+
+Re-exports any conversation the moment its transcript file is updated on disk.
+
+### Force full rebuild
+
+```bash
+python -m agy_exporter --force
+```
+
+Ignores cache — rebuilds every note from scratch.
+
+### Export a specific conversation
+
+```bash
+python -m agy_exporter --conv 45c4c5dc-51af-405e-b45d-35166239f31b
+```
 
 ### List all conversations
 
@@ -294,39 +408,17 @@ python -m agy_exporter --list
 
 ```
 Conv ID                                  Steps  Title
-──────────────────────────────────────────────────────────────────────────────────────────
+------------------------------------------------------------------------------------------
 1ee165ba-7e58-419d-8294-6e1e40e82646      13  Reviewing Financial Monitoring Codebase
 45c4c5dc-51af-405e-b45d-35166239f31b    1824  Implementing Financial System Upgrades
 cb06801d-3892-4b49-876a-848ca8610689     718  Fixing EAS CLI Setup
 ...
 ```
 
-### Continuous sync (watch mode)
+### Debug configuration issues
 
 ```bash
-python -m agy_exporter --watch
-```
-
-Re-exports any conversation the moment its transcript is updated.
-
-### Force full rebuild
-
-```bash
-python -m agy_exporter --force
-```
-
-### Export specific conversation(s)
-
-```bash
-python -m agy_exporter --conv 45c4c5dc-51af-405e-b45d-35166239f31b
-```
-
-### Custom paths
-
-```bash
-agy-exporter \
-  --source ~/Documents/OBS \
-  --vault ~/Documents/MyVault
+python -m agy_exporter --show-config
 ```
 
 ---
@@ -336,17 +428,20 @@ agy-exporter \
 | Flag | Short | Description |
 |---|---|---|
 | `--source DIR` | `-s` | Antigravity workspace root (auto-detected if omitted) |
-| `--vault DIR` | `-v` | Obsidian vault root (defaults to `--source`) |
-| `--watch` | `-w` | Continuous sync mode |
+| `--vault DIR` | `-v` | Obsidian vault root (defaults to `--source` if omitted) |
+| `--save-config` | | Save `--source` and `--vault` to config file permanently |
+| `--show-config` | | Print resolved configuration paths and exit |
+| `--watch` | `-w` | Continuous sync — re-exports on file change |
 | `--interval SECS` | | Polling interval for watch mode (default: `5.0`) |
-| `--force` | `-f` | Re-export all, ignoring hash/mtime cache |
-| `--debug` | `-d` | Write decode-error blobs to `.agy_debug/` |
-| `--conv UUID…` | `-c` | Filter to specific conversation UUID(s) |
-| `--no-tool-results` | | Omit tool output blocks (shorter notes) |
-| `--max-tool-results-per-turn NUM` | | Max tool results to show per turn (default: unlimited) |
-| `--max-tool-output-length CHARS` | | Max character length of tool output blocks (default: unlimited) |
+| `--force` | `-f` | Re-export all notes, ignoring hash/mtime cache |
+| `--debug` | `-d` | Write decode errors to `.agy_debug/` |
+| `--conv UUID…` | `-c` | Export only the specified conversation UUID(s) |
+| `--no-tool-results` | | Omit tool output blocks (produces shorter notes) |
+| `--max-tool-results-per-turn N` | | Cap tool result blocks per turn (default: unlimited) |
+| `--max-tool-output-length N` | | Cap characters per tool output block (default: unlimited) |
 | `--list` | | Print conversation catalog and exit |
 | `--verbose` | `-V` | Enable DEBUG-level logging |
+
 
 ---
 
