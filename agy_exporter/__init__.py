@@ -1,11 +1,15 @@
 """
 agy_exporter
 ============
-Synchronizes Google Antigravity conversations to an Obsidian knowledge vault.
+Backward-compatible wrapper importing from convovault.
 """
 from __future__ import annotations
-from .config import ExporterConfig
-from .models import Step, ToolCall, Turn, ConversationTranscript, ConversationMeta, ConversationIntelligence
-from .sync import run_export, export_one, start_watch, ExportState
+from convovault.config.exporter import ExporterConfig
+from convovault.models.conversation import (
+    Step, ToolCall, Turn, ConversationTranscript, ConversationMeta, ConversationIntelligence
+)
+from convovault.exporter.engine import run_export, export_one
+from convovault.watcher.watcher import start_watch
+from convovault.state.state import ExportState
 
-__version__ = "2.0.0"
+__version__ = "2.1.0"
