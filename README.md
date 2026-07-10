@@ -1,731 +1,403 @@
 <div align="center">
 
-<a href="https://github.com/owrew/antigravity-obsidian-exporter">
-  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=24&pause=1200&color=6366F1&center=true&vCenter=true&multiline=true&width=700&height=120&lines=Built+with+%E2%9D%A4%EF%B8%8F+by+Owais+Ali;Reverse+Engineering+%E2%80%A2+Obsidian+%E2%80%A2+Python+%E2%80%A2+Automation" alt="Typing SVG" />
-</a>
+<svg xmlns="http://www.w3.org/2000/svg" width="700" height="120" viewBox="0 0 700 120">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#7c3aed"/>
+      <stop offset="100%" style="stop-color:#2563eb"/>
+    </linearGradient>
+  </defs>
+  <rect width="700" height="120" fill="#0d1117" rx="14"/>
+  <text x="350" y="68" font-family="'Segoe UI', system-ui, sans-serif" font-size="44" font-weight="800" fill="url(#grad)" text-anchor="middle" dominant-baseline="middle">🗄️ ConvoVault</text>
+  <text x="350" y="100" font-family="'Segoe UI', system-ui, sans-serif" font-size="16" fill="#8b949e" text-anchor="middle" dominant-baseline="middle">The open-source knowledge vault for your AI conversations</text>
+</svg>
 
-<br/>
+# ConvoVault
 
-# 🪐 Antigravity Obsidian Exporter
+**The open-source knowledge vault for your AI conversations.**
 
-**Automatically synchronize every Google Antigravity conversation into your Obsidian knowledge base — with full conversation history, tool calls, AI thinking blocks, wiki-links, timeline indexes, and cross-conversation intelligence.**
+[![CI](https://github.com/owrew/antigravity-obsidian-exporter/actions/workflows/ci.yml/badge.svg)](https://github.com/owrew/antigravity-obsidian-exporter/actions/workflows/ci.yml)
+[![Python](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://python.org)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Providers](https://img.shields.io/badge/providers-7-purple.svg)](#providers)
+[![Tests](https://img.shields.io/badge/tests-15%20passing-brightgreen.svg)](tests/)
 
-<br/>
-
-[![Python](https://img.shields.io/badge/Python-3.9%2B-3776ab?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
-[![License: MIT](https://img.shields.io/badge/License-MIT-22c55e?style=for-the-badge)](LICENSE)
-[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-8b5cf6?style=for-the-badge)](https://github.com/owrew/antigravity-obsidian-exporter)
-[![Status](https://img.shields.io/badge/Status-Active-f59e0b?style=for-the-badge)](CHANGELOG.md)
-[![No Dependencies](https://img.shields.io/badge/Core-Zero%20Dependencies-06b6d4?style=for-the-badge)](pyproject.toml)
-
-<br/>
-
-[📖 Docs](#how-it-works) · [🚀 Quick Start](#quick-start) · [⚙️ CLI Options](#cli-options) · [🗺 Roadmap](#roadmap) · [🤝 Contributing](CONTRIBUTING.md)
+ConvoVault automatically imports, synchronizes, indexes, and connects conversations from **multiple AI assistants** into a single Obsidian knowledge base — preserving metadata, code, tool calls, reasoning blocks, timestamps, and semantic relationships.
 
 </div>
 
 ---
 
-## 📋 Table of Contents
+## ✨ Features
 
-- [Overview](#overview)
-- [Features](#features)
-- [Architecture](#architecture)
-- [Project Structure](#project-structure)
-- [Installation](#installation)
-- [Quick Start](#quick-start)
-- [Usage](#usage)
-- [CLI Options](#cli-options)
-- [How It Works](#how-it-works)
-- [Data Sources](#data-sources)
-- [Export Example](#export-example)
-- [Obsidian Integration](#obsidian-integration)
-- [Watch Mode](#watch-mode)
-- [Performance](#performance)
-- [Roadmap](#roadmap)
-- [FAQ](#faq)
-- [Troubleshooting](#troubleshooting)
-- [Contributing](#contributing)
-- [License](#license)
+- 📥 **Universal Import** — One platform for every AI provider
+- 🔄 **Incremental Sync** — Only processes what changed (SHA-256 + mtime)
+- 🧠 **Intelligence Extraction** — Technologies, topics, files, commands auto-detected
+- 🕸️ **Graph Relationships** — Conversations cross-linked by shared content
+- 🗺️ **Global Indexes** — Timeline, Tags, Topics, Conversations dashboards
+- 💬 **Complete Archive** — Every turn, thinking block, tool call, and output preserved
+- 📊 **Mermaid Diagrams** — Tech stack visualized per conversation
+- 🔍 **Search** — Full-text search across all exported notes
+- 👀 **Watch Mode** — Live sync via `watchdog` or polling fallback
+- 🔌 **Plugin System** — Add new providers via Python entry points
 
 ---
 
-## Overview
+## 🤖 Providers
 
-**Antigravity Obsidian Exporter** reverse-engineers how Google Antigravity stores conversations locally and converts them into richly formatted Obsidian Markdown notes — complete with YAML frontmatter, wiki-links, auto-generated tags, conversation intelligence, and a global timeline index.
+| Provider | Status | Data Source |
+|---|---|---|
+| **Google Antigravity** | ✅ Active | Protobuf + JSONL transcripts |
+| **ChatGPT** | ✅ Active | `conversations.json` export |
+| **Claude.ai** | ✅ Active | `conversations.json` export |
+| **Open WebUI** | ✅ Active | `webui.db` SQLite database |
+| **Ollama / LM Studio** | ✅ Active | JSON chat folders |
+| **Gemini** | 🔜 Planned | — |
+| **LibreChat** | 🔜 Planned | — |
 
-Built from scratch without any protobuf schema or official documentation. The storage format was discovered through binary analysis of `.db`, `.pb`, and `.jsonl` files.
-
-> **No API keys. No network requests. No Google account. Purely local.**
-
----
-
-## Features
-
-<table>
-<thead>
-<tr><th>Feature</th><th>Status</th><th>Description</th></tr>
-</thead>
-<tbody>
-<tr><td>💬 Full conversation export</td><td>✅</td><td>Every user turn, assistant response, and timestamp preserved</td></tr>
-<tr><td>🔧 Tool calls</td><td>✅</td><td>All tool invocations shown with arguments and summaries</td></tr>
-<tr><td>📄 Tool outputs</td><td>✅</td><td>Rendered in collapsible <code>&lt;details&gt;</code> blocks with truncation</td></tr>
-<tr><td>💭 Thinking blocks</td><td>✅</td><td>Model reasoning preserved in collapsible sections</td></tr>
-<tr><td>💾 SQLite fallback</td><td>✅</td><td>Raw protobuf decode when JSONL transcripts are missing</td></tr>
-<tr><td>🏷️ Auto tags</td><td>✅</td><td>70+ technology patterns → <code>#tags</code></td></tr>
-<tr><td>🔗 Wiki links</td><td>✅</td><td>Auto-generated <code>[[WikiLinks]]</code> from content</td></tr>
-<tr><td>🔁 Duplicate detection</td><td>✅</td><td>SHA-256 hash + mtime — only rewrites changed notes</td></tr>
-<tr><td>👁 Watch mode</td><td>✅</td><td>Instant re-export on file change (watchdog or polling)</td></tr>
-<tr><td>📑 YAML frontmatter</td><td>✅</td><td>id, title, created, updated, last_viewed, aliases, tags</td></tr>
-<tr><td>📅 Timeline index</td><td>✅</td><td>Chronological <code>Timeline.md</code>, topic groups, tag index</td></tr>
-<tr><td>🤝 Related conversations</td><td>✅</td><td>Cross-links conversations via shared files, tech, topics</td></tr>
-<tr><td>📊 Mermaid diagrams</td><td>✅</td><td>Tech-stack flowchart in every conversation note</td></tr>
-<tr><td>🧠 Intelligence summary</td><td>✅</td><td>Auto-extracted topics, technologies, files, commands</td></tr>
-<tr><td>📦 pip installable</td><td>✅</td><td><code>pip install .</code> adds <code>agy-exporter</code> to PATH</td></tr>
-</tbody>
-</table>
+**Future providers:** Cursor, Cline, Continue.dev, Aider, Roo Code, GitHub Copilot, Microsoft Copilot, OpenHands, and community plugins.
 
 ---
 
-## Architecture
-
-```mermaid
-flowchart LR
-    subgraph Source["🗄 Antigravity Local Storage"]
-        A["brain/*/transcript_full.jsonl\n(Primary)"]
-        B["agyhub_summaries_proto.pb\n(Titles + Timestamps)"]
-        C["annotations/*.pbtxt\n(Last Viewed)"]
-        D["conversations/*.db\n(SQLite Fallback)"]
-    end
-
-    subgraph Parser["⚙️ Parser Layer"]
-        E["sources/transcript.py"]
-        F["sources/pb_summaries.py"]
-        G["sources/annotations.py"]
-        H["sources/sqlite_db.py"]
-    end
-
-    subgraph Analysis["🧠 Intelligence Layer"]
-        I["analysis/intelligence.py\nSummary · Tech · Files · Commands"]
-        J["analysis/relations.py\nCross-conversation links"]
-        K["analysis/wikilinks.py\nWikiLinks · Tags"]
-    end
-
-    subgraph Render["📝 Render Layer"]
-        L["render/conversation.py\nMarkdown + Frontmatter"]
-        M["render/index.py\nTimeline · Topics · Tags"]
-        N["render/mermaid.py\nTech diagrams"]
-    end
-
-    subgraph Vault["📚 Obsidian Vault"]
-        O["AI Vault/Chats/*.md"]
-        P["Timeline.md"]
-        Q["Topics.md"]
-        R["Tags.md"]
-    end
-
-    A --> E
-    B --> F
-    C --> G
-    D --> H
-    E & F & G & H --> I
-    I --> J
-    J --> K
-    K --> L
-    L --> O
-    L --> M
-    M --> P & Q & R
-```
-
-### Sync Workflow
+## 🏗️ Architecture
 
 ```mermaid
 flowchart TD
-    Start([🚀 Run]) --> Load[Load summaries.pb]
-    Load --> Discover[Discover conversation IDs]
-    Discover --> ReadAll[Load all transcripts]
-    ReadAll --> Intel[Generate intelligence]
-    Intel --> Relations[Compute cross-relations]
-    Relations --> Loop{For each conversation}
-    Loop --> Hash[Compute SHA-256 content hash]
-    Hash --> Changed{Changed?}
-    Changed -- No --> Skip[⏭ Skip]
-    Changed -- Yes --> Write[✍️ Write Markdown note]
-    Write --> State[Update state file]
-    Skip --> Loop
-    State --> Loop
-    Loop -- Done --> Indexes[Rebuild Timeline · Topics · Tags]
-    Indexes --> Done([✅ Complete])
+    A["AI Provider\n(Antigravity / ChatGPT / Claude / Ollama…)"]
+    B["BaseProvider Interface\ndiscover_conversations()\nread_conversation()\nload_metadata_index()"]
+    C["Unified Conversation Model\nid · provider · steps · meta · intelligence"]
+    D["Analysis Pipeline\nIntelligence · Relations · WikiLinks"]
+    E["Rendering Pipeline\nMarkdown · YAML Frontmatter · Mermaid"]
+    F["Obsidian Vault\nAI Vault/Chats/*.md"]
+    G["Global Indexes\nTimeline · Topics · Tags · Conversations"]
+
+    A --> B --> C --> D --> E --> F
+    E --> G
 ```
 
 ---
 
-## Project Structure
+## ⚡ Quick Start
 
-```
-antigravity-obsidian-exporter/
-│
-├── agy_exporter/               # Main package
-│   ├── __init__.py
-│   ├── __main__.py             # CLI entrypoint
-│   ├── config.py               # ExporterConfig dataclass
-│   ├── models.py               # Data models (Step, Turn, ConversationTranscript, …)
-│   │
-│   ├── sources/                # Data loaders
-│   │   ├── transcript.py       # JSONL reader (primary source)
-│   │   ├── pb_summaries.py     # agyhub_summaries_proto.pb parser
-│   │   ├── annotations.py      # annotations/*.pbtxt last-viewed parser
-│   │   └── sqlite_db.py        # SQLite + raw protobuf fallback
-│   │
-│   ├── analysis/               # Conversation intelligence
-│   │   ├── intelligence.py     # Topics, tech, files, commands, summary
-│   │   ├── relations.py        # Cross-conversation similarity scoring
-│   │   └── wikilinks.py        # 70+ WikiLink + tag patterns
-│   │
-│   ├── render/                 # Markdown generation
-│   │   ├── conversation.py     # Full note formatter
-│   │   ├── index.py            # Timeline, Topics, Tags, Conversations
-│   │   └── mermaid.py          # Tech stack Mermaid diagrams
-│   │
-│   └── sync/                   # Orchestration
-│       ├── engine.py           # Main export pipeline
-│       ├── state.py            # Idempotency state (.agy_export_state.json)
-│       └── watcher.py          # Watch mode (polling / watchdog)
-│
-├── tests/                      # Unit tests
-│   ├── test_pb_decoder.py
-│   ├── test_transcript.py
-│   ├── test_intelligence.py
-│   ├── test_wikilinks.py
-│   ├── test_markdown.py
-│   └── test_relations.py
-│
-├── examples/
-│   ├── example_config.py       # Programmatic configuration example
-│   └── sample_export.md        # Sample exported conversation note
-│
-├── run_tests.py                # Zero-dependency test runner
-├── pyproject.toml              # Package metadata + build config
-├── requirements.txt            # Optional dependencies
-├── README.md
-├── CHANGELOG.md
-├── CONTRIBUTING.md
-├── CODE_OF_CONDUCT.md
-├── SECURITY.md
-└── LICENSE
-```
-
----
-
-## Installation
-
-### Requirements
-
-- Python **3.9+**
-- No third-party packages required for core functionality
-
-### Option 1 — Install from source (recommended)
-
-```bash
-git clone https://github.com/owrew/antigravity-obsidian-exporter.git
-cd antigravity-obsidian-exporter
-pip install .
-```
-
-This adds `agy-exporter` to your PATH.
-
-### Option 2 — Run directly without installing
-
-```bash
-git clone https://github.com/owrew/antigravity-obsidian-exporter.git
-cd antigravity-obsidian-exporter
-python -m agy_exporter --help
-```
-
-### Optional: faster watch mode
-
-```bash
-pip install watchdog
-```
-
----
-
-## Quick Start
-
-### Step 1 — Clone the repo
+### 1. Clone
 
 ```bash
 git clone https://github.com/owrew/antigravity-obsidian-exporter.git
 cd antigravity-obsidian-exporter
 ```
 
-### Step 2 — Find your Antigravity workspace
+### 2. Auto-detect workspace (Antigravity)
 
-Your workspace is the folder containing both a `brain/` subdirectory and a `conversations/` subdirectory.  
-**The exporter auto-detects it** — it scans these locations in order:
+The exporter scans common install paths automatically. If your Antigravity workspace is in any of these, no configuration is needed:
 
-| Priority | Path checked |
-|---|---|
-| 1 | Current working directory |
-| 2 | `~/OneDrive/Downloads/OBS` |
-| 3 | `~/OneDrive/Documents/OBS` |
-| 4 | `~/Downloads/OBS` |
-| 5 | `~/Documents/OBS` |
-| 6 | `~/Desktop/OBS` |
-| 7 | `~/Library/Application Support/Antigravity` *(macOS)* |
-| 8 | `~/.antigravity` / `~/.config/antigravity` *(Linux)* |
+- `~/OneDrive/Downloads/OBS` (Windows)
+- `~/Downloads/OBS`, `~/Documents/OBS`, `~/Desktop/OBS`
+- `~/Library/Application Support/Antigravity` (macOS)
+- `~/.antigravity`, `~/.config/antigravity` (Linux)
 
-### Step 3 — Save your paths permanently
-
-Run once to lock in your source and vault paths — you'll never need to type them again:
+### 3. Save your paths permanently (run once)
 
 ```bash
-python -m agy_exporter \
-  --source "C:\Users\you\OneDrive\Downloads\OBS" \
-  --vault  "C:\Users\you\Documents\ObsidianVault" \
-  --save-config
+python -m convovault config save --source "C:\Users\you\OBS" --vault "C:\Users\you\ObsidianVault"
 ```
 
-This writes to `%APPDATA%\agy_exporter\config.json` (Windows) or `~/.config/agy_exporter/config.json` (macOS/Linux).
-
-> **After `--save-config`, you just run `python -m agy_exporter` with no arguments every time.**
-
-### Step 4 — Verify setup
+### 4. Export
 
 ```bash
-python -m agy_exporter --show-config
-```
-
-```
-=== Antigravity Obsidian Exporter - Active Configuration ===
-
-  Config file : C:\Users\you\AppData\Roaming\agy_exporter\config.json
-  Source dir  : C:\Users\you\OneDrive\Downloads\OBS
-    brain/    : [OK] found
-    convo/    : [OK] found
-    summ.pb   : [OK] found
-  Vault dir   : C:\Users\you\Documents\ObsidianVault
-  Output dir  : C:\Users\you\Documents\ObsidianVault\AI Vault\Chats
-```
-
-### Step 5 — Export
-
-```bash
-python -m agy_exporter
+python -m convovault export
 ```
 
 Open your vault in Obsidian — notes appear under **AI Vault → Chats**.
 
 ---
 
-## Configuration
+## 🛠️ CLI Reference
 
-Configuration is resolved in this priority order (highest wins):
-
-```
-1. CLI flags           --source / --vault
-2. Environment vars    AGY_SOURCE / AGY_VAULT
-3. Config file         %APPDATA%\agy_exporter\config.json
-4. Auto-detection      scans common Antigravity install paths
-```
-
-### Option A — Config file (recommended)
-
-```bash
-python -m agy_exporter --source PATH --vault PATH --save-config
-```
-
-The saved config is a simple JSON file you can edit manually:
-
-```json
-{
-  "source": "C:\\Users\\you\\OneDrive\\Downloads\\OBS",
-  "vault":  "C:\\Users\\you\\Documents\\MyVault"
-}
-```
-
-### Option B — Environment variables
-
-Set once in your shell profile (`~/.bashrc`, `~/.zshrc`, PowerShell `$PROFILE`):
-
-```bash
-# macOS / Linux
-export AGY_SOURCE="$HOME/antigravity"
-export AGY_VAULT="$HOME/Documents/ObsidianVault"
-
-# Windows PowerShell
-$env:AGY_SOURCE = "C:\Users\you\OneDrive\Downloads\OBS"
-$env:AGY_VAULT  = "C:\Users\you\Documents\ObsidianVault"
-```
-
-### Option C — Pass paths directly every run
-
-```bash
-python -m agy_exporter \
-  --source "C:\Users\you\OneDrive\Downloads\OBS" \
-  --vault  "C:\Users\you\Documents\ObsidianVault"
-```
-
----
-
-## Usage
-
-### One-shot export (default)
-
-```bash
-python -m agy_exporter
-```
-
-Exports only conversations that changed since the last run (SHA-256 hash + mtime check).
-
-### Continuous sync — watch mode
-
-```bash
-python -m agy_exporter --watch
-```
-
-Re-exports any conversation the moment its transcript file is updated on disk.
-
-### Force full rebuild
-
-```bash
-python -m agy_exporter --force
-```
-
-Ignores cache — rebuilds every note from scratch.
-
-### Export a specific conversation
-
-```bash
-python -m agy_exporter --conv 45c4c5dc-51af-405e-b45d-35166239f31b
-```
-
-### List all conversations
-
-```bash
-python -m agy_exporter --list
-```
+### Subcommands
 
 ```
-Conv ID                                  Steps  Title
-------------------------------------------------------------------------------------------
-1ee165ba-7e58-419d-8294-6e1e40e82646      13  Reviewing Financial Monitoring Codebase
-45c4c5dc-51af-405e-b45d-35166239f31b    1824  Implementing Financial System Upgrades
-cb06801d-3892-4b49-876a-848ca8610689     718  Fixing EAS CLI Setup
-...
+convovault export     Export conversations to Obsidian vault
+convovault watch      Live sync — re-exports on file changes
+convovault providers  List registered providers
+convovault search     Search exported notes
+convovault stats      Show sync statistics
+convovault doctor     Run environment health diagnostics
+convovault config     Manage persistent configuration
+convovault version    Show version
 ```
 
-### Debug configuration issues
-
-```bash
-python -m agy_exporter --show-config
-```
-
----
-
-## CLI Options
+### `export` flags
 
 | Flag | Short | Description |
 |---|---|---|
-| `--source DIR` | `-s` | Antigravity workspace root (auto-detected if omitted) |
-| `--vault DIR` | `-v` | Obsidian vault root (defaults to `--source` if omitted) |
-| `--save-config` | | Save `--source` and `--vault` to config file permanently |
-| `--show-config` | | Print resolved configuration paths and exit |
-| `--watch` | `-w` | Continuous sync — re-exports on file change |
-| `--interval SECS` | | Polling interval for watch mode (default: `5.0`) |
-| `--force` | `-f` | Re-export all notes, ignoring hash/mtime cache |
-| `--debug` | `-d` | Write decode errors to `.agy_debug/` |
-| `--conv UUID…` | `-c` | Export only the specified conversation UUID(s) |
-| `--no-tool-results` | | Omit tool output blocks (produces shorter notes) |
-| `--max-tool-results-per-turn N` | | Cap tool result blocks per turn (default: unlimited) |
-| `--max-tool-output-length N` | | Cap characters per tool output block (default: unlimited) |
-| `--list` | | Print conversation catalog and exit |
-| `--verbose` | `-V` | Enable DEBUG-level logging |
+| `--source DIR` | `-s` | Source folder (auto-detected if omitted) |
+| `--vault DIR` | `-v` | Obsidian vault root (defaults to `--source`) |
+| `--provider NAME` | `-p` | Provider: `antigravity`, `chatgpt`, `claude`, etc. |
+| `--save` | | Persist `--source`/`--vault`/`--provider` to config file |
+| `--force` | `-f` | Rebuild all notes ignoring cache |
+| `--debug` | `-d` | Write decode errors to `.convovault_debug/` |
+| `--conv UUID…` | `-c` | Export specific conversation UUID(s) only |
+| `--no-tool-results` | | Omit tool output blocks (shorter notes) |
+| `--max-tool-results-per-turn N` | | Cap tool result blocks per turn |
+| `--max-tool-output-length N` | | Cap characters per tool output block |
+| `--verbose` | `-V` | Enable DEBUG logging |
 
+### `watch` flags
+
+Same as `export` plus `--interval SECS` (default: 5.0).
 
 ---
 
-## How It Works
+## ⚙️ Configuration
 
-### Storage Reverse Engineering
+Configuration is resolved in this priority order:
 
-Antigravity stores conversations in two parallel systems:
+```
+1. CLI flags       --source / --vault / --provider
+2. Environment     AGY_SOURCE / AGY_VAULT / AGY_PROVIDER
+3. Config file     %APPDATA%\convovault\config.json
+4. Auto-detect     scans 14 common install paths
+```
 
-| Path | Format | Used for |
-|---|---|---|
-| `brain/{id}/.system_generated/logs/transcript_full.jsonl` | JSONL | Full conversation history (**primary source**) |
-| `agyhub_summaries_proto.pb` | Binary protobuf | Conversation titles + step counts |
-| `annotations/{id}.pbtxt` | Text protobuf | Last-viewed timestamp |
-| `conversations/{id}.db` | SQLite + protobuf BLOBs | Fallback when transcript files are missing |
+### Config file (recommended)
 
-The exporter reads `transcript_full.jsonl` first — this contains clean JSON with every step, tool call, timestamp, and content. The `.pb` file is parsed with a pure-Python varint decoder (no schema required) to extract titles.
+```bash
+# Save paths once
+convovault config save --source PATH --vault PATH --provider antigravity
 
-### Idempotency
+# Show active configuration
+convovault config show
+```
 
-A `.agy_export_state.json` file in the vault root tracks:
+The config file is plain JSON you can also edit manually:
 
 ```json
 {
-  "45c4c5dc-...": {
-    "content_hash": "1c923116a132c27d",
-    "source_mtime": 1783187693.18,
-    "note_path": "AI Vault/Chats/Implementing Financial System Upgrades.md",
-    "exported_at": "2026-07-09T18:02:37Z"
-  }
+  "source": "C:\\Users\\you\\OBS",
+  "vault":  "C:\\Users\\you\\Documents\\MyVault",
+  "provider": "antigravity"
 }
 ```
 
-On each run, the exporter only rewrites a note if either the SHA-256 content hash or the source file's mtime has changed.
-
----
-
-## Data Sources
-
-```
-Priority 1 ─ transcript_full.jsonl   ← richest source
-Priority 2 ─ agyhub_summaries_proto.pb   ← titles & dates
-Priority 3 ─ annotations/*.pbtxt    ← last-viewed time
-Priority 4 ─ conversations/*.db     ← fallback (protobuf decode)
-```
-
----
-
-## Export Example
-
-See [`examples/sample_export.md`](examples/sample_export.md) for a full example of an exported conversation note.
-
-**Frontmatter:**
-
-```yaml
----
-id: "45c4c5dc-51af-405e-b45d-35166239f31b"
-title: "Implementing Financial System Upgrades"
-created: 2026-06-18
-updated: 2026-06-24
-last_viewed: 2026-06-24
-step_count: 1824
-tags:
-  - antigravity
-  - ai-chat
-  - typescript
-  - react
-  - mysql
-  - drizzle-orm
-aliases:
-  - "Implementing Financial System Upgrades"
----
-```
-
-**Conversation body:**
-
-```
-### 👤 User — Turn 1 *(2026-06-18 14:38)*
-
-Complete the task at CODEX_PROMPT.md…
-
-### 🤖 Assistant — Turn 1 *(2026-06-18 14:38)*
-
-> 🔧 **`view_file`** — Reading CODEX_PROMPT.md
-
-<details>
-<summary>📄 Tool result: VIEW_FILE</summary>
-
-```…```
-
-</details>
-```
-
----
-
-## Obsidian Integration
-
-### Vault Layout
-
-```
-Your Vault/
-├── AI Vault/
-│   ├── Chats/
-│   │   ├── Implementing Financial System Upgrades.md
-│   │   ├── Fixing EAS CLI Setup.md
-│   │   └── … more notes
-├── Timeline.md       ← Chronological index
-├── Conversations.md  ← Master table of all chats
-├── Topics.md         ← Grouped by topic
-└── Tags.md           ← Grouped by technology tag
-```
-
-### Recommended Obsidian Plugins
-
-| Plugin | Why |
-|---|---|
-| **Dataview** | Query conversations by date, technology, or topic |
-| **Graph View** | Visualize wiki-link connections between conversations |
-| **Templater** | Customize note templates |
-| **Tag Wrangler** | Manage the auto-generated tags |
-
-### Graph View Tips
-
-The exporter maximises graph density by:
-
-- Linking all conversations to their shared technology nodes (`[[React]]`, `[[Docker]]`, etc.)
-- Auto-detecting related conversations and adding `Related Chats` links
-- Using consistent titles across index files and note bodies
-
----
-
-## Watch Mode
-
-When you run `--watch`, the exporter:
-
-1. Does a full sync pass immediately
-2. Monitors `brain/*/transcript_full.jsonl` for changes
-3. Re-exports only the changed conversation (in seconds)
-4. Rebuilds all index files
-
-If **watchdog** is installed, file events are instant. Otherwise, polling runs every `--interval` seconds (default 5).
+### Environment variables
 
 ```bash
-# Install watchdog for instant (event-based) updates
-pip install watchdog
+# Linux / macOS
+export AGY_SOURCE="$HOME/antigravity"
+export AGY_VAULT="$HOME/ObsidianVault"
+export AGY_PROVIDER="antigravity"
 
-python -m agy_exporter --watch --interval 2
+# Windows PowerShell
+$env:AGY_SOURCE = "C:\Users\you\OBS"
+$env:AGY_VAULT  = "C:\Users\you\Vault"
 ```
 
 ---
 
-## Performance
+## 🔌 Provider Usage
 
-| Conversations | First run | Subsequent runs |
-|---|---|---|
-| 12 | ~14 seconds | ~5 seconds (skipped) |
-| 100 | ~90 seconds | ~8 seconds |
-| 1 000 | ~15 min | ~30 seconds |
+### Google Antigravity (default)
 
-Subsequent runs are fast because unchanged conversations are detected by hash + mtime and skipped before any Markdown generation.
+```bash
+convovault export --provider antigravity --source "C:\Users\you\OBS"
+```
+
+### ChatGPT
+
+1. Go to **Settings → Data Controls → Export Data**
+2. Download the ZIP, extract `conversations.json`
+3. Run:
+
+```bash
+convovault export --provider chatgpt --source path/to/conversations.json
+```
+
+### Claude.ai
+
+1. Go to **Settings → Privacy → Export Data**
+2. Download the ZIP, extract `conversations.json`
+3. Run:
+
+```bash
+convovault export --provider claude --source path/to/conversations.json
+```
+
+### Open WebUI
+
+```bash
+convovault export --provider openwebui --source path/to/webui.db
+```
+
+### Ollama / LM Studio
+
+```bash
+# LM Studio (JSON chat files)
+convovault export --provider ollama --source "$HOME\AppData\Roaming\LM Studio\conversations"
+```
 
 ---
 
-## Roadmap
+## 📁 Vault Output Structure
 
-### Completed ✅
+```
+ObsidianVault/
+│
+├── AI Vault/
+│   └── Chats/
+│       ├── Fixing EAS CLI Setup.md
+│       ├── Implementing Financial System.md
+│       └── ...
+│
+├── Timeline.md       ← Chronological event log
+├── Conversations.md  ← Full metadata table
+├── Tags.md           ← Grouped by technology tags
+└── Topics.md         ← Grouped by topic domains
+```
 
-- [x] JSONL transcript parsing
-- [x] Pure-Python protobuf parser (no schema)
-- [x] SQLite + raw protobuf fallback
-- [x] YAML frontmatter with full metadata
-- [x] Automatic wiki-links (70+ patterns)
-- [x] Tool call + output rendering
-- [x] Thinking block support
-- [x] SHA-256 hash idempotency
-- [x] Watch mode (watchdog + polling)
-- [x] Timeline, Topics, Tags, Conversations indexes
-- [x] Cross-conversation relation detection
-- [x] Conversation intelligence (topics, tech, files, commands)
-- [x] Mermaid tech-stack diagrams
-- [x] pip installable package
-- [x] 10-test unit test suite
+### Note structure
 
-### Planned 📋
+Each exported note contains:
 
-- [ ] `--since DATE` flag to export only recent conversations
-- [ ] JSON export format
-- [ ] HTML export format
-- [ ] Search index generation (compatible with Obsidian Search)
-- [ ] RSS/Atom change feed
-- [ ] Optional AI-generated summaries (local Ollama)
-- [ ] Semantic embeddings for smarter relation detection
-- [ ] Daily Notes integration
-- [ ] Canvas `.canvas` file generation for Obsidian Canvas view
+- **YAML frontmatter** — id, provider, title, date, duration, technologies, topics, code languages
+- **Conversation Statistics** — turn counts, tool call breakdown
+- **Tech Graph** — Mermaid flowchart of detected technologies
+- **Wiki Links** — `[[Technology]]` links for Obsidian Graph
+- **Related Conversations** — cross-linked by shared files, tech, topics
+- **Complete Conversation History** — every turn in order, with:
+  - Timestamps on every turn
+  - Collapsible thinking blocks
+  - Tool call arguments and full outputs
+  - Terminal output, file contents, search results
+- **Files Mentioned & Commands Executed** sections
+- **Conversation Intelligence** summary
+
+---
+
+## 🧩 Plugin System
+
+Add a new provider by implementing `BaseProvider`:
+
+```python
+from convovault.providers.base import BaseProvider
+from convovault.models import Conversation, ConversationMeta
+from convovault.config.exporter import ExporterConfig
+from typing import List, Dict, Optional
+
+class MyProvider(BaseProvider):
+    @property
+    def name(self) -> str:
+        return "myprovider"
+
+    def discover_conversations(self, config: ExporterConfig) -> List[str]:
+        # Return list of conversation IDs
+        return []
+
+    def read_conversation(self, conv_id: str, config: ExporterConfig) -> Optional[Conversation]:
+        # Read and normalize conversation data
+        return None
+
+    def load_metadata_index(self, config: ExporterConfig) -> Dict[str, ConversationMeta]:
+        # Return metadata index (title, timestamps)
+        return {}
+```
+
+Register via Python entry points in `pyproject.toml`:
+
+```toml
+[project.entry-points."convovault.providers"]
+myprovider = "my_package.provider:MyProvider"
+```
+
+Or register programmatically:
+
+```python
+from convovault.providers import register_provider
+register_provider("myprovider", MyProvider)
+```
+
+---
+
+## 🗺️ Roadmap
+
+### v2.1 (Current)
+- [x] Multi-provider architecture (Antigravity, ChatGPT, Claude, Ollama, Open WebUI)
+- [x] Archive-quality note rendering
+- [x] 4-level config system with auto-detection
+- [x] Plugin system with entry points
+- [x] Subcommand CLI
+
+### v2.2 (Planned)
+- [ ] HTML export
+- [ ] Full-text search index
+- [ ] Canvas generation (Obsidian Canvas)
+- [ ] Gemini provider
+- [ ] LibreChat provider
+- [ ] Cursor / Cline providers
+
+### v3.0 (Future)
+- [ ] Semantic embeddings + local vector search
+- [ ] RAG indexing
+- [ ] AI-generated summaries
+- [ ] MCP server integration
 - [ ] PDF export
+- [ ] Web UI
 
 ---
 
-## FAQ
+## 🛟 Troubleshooting
 
-**Q: Does this require a Google account or API key?**
-A: No. Everything runs entirely locally — no network requests are made.
+**Run the doctor:**
+```bash
+convovault doctor
+```
 
-**Q: Will it work on macOS or Linux?**
-A: Yes. The paths are platform-independent. Auto-detection uses `os.path.expanduser("~")`.
+**Nothing is being exported:**
+```bash
+convovault config show    # Verify paths resolve correctly
+```
 
-**Q: Is it safe to run while Antigravity is open?**
-A: Yes. The exporter only reads files; it never writes to the Antigravity workspace.
+**Vault is stale / notes not updating:**
+```bash
+convovault export --force    # Force full rebuild
+```
 
-**Q: Why do some notes show "SQLite fallback"?**
-A: Very short conversations (< 5 steps) may not have a `transcript_full.jsonl` yet. The SQLite fallback decodes the raw protobuf BLOBs but may produce partial content.
-
-**Q: Can I run it on a schedule (e.g. every hour)?**
-A: Yes — use `--watch`, or add it to Task Scheduler (Windows) / cron (Linux/macOS).
-
-**Q: My vault is in a different folder from my workspace. How do I set it up?**
-A: Use `--source /path/to/workspace --vault /path/to/vault`.
-
-**Q: Will it overwrite notes I have edited manually?**
-A: Only if the source transcript changed. The hash check prevents overwrites for unchanged conversations.
-
----
-
-## Troubleshooting
-
-**`No conversations discovered`**
-→ Check that `--source` points to a folder containing `brain/` and `conversations/`.
-
-**`Titles showing as UUID fragments`**
-→ `agyhub_summaries_proto.pb` may be missing or corrupt. Titles fall back to the first user message.
-
-**`SQLite fallback, content may be partial`**
-→ This is expected for very short conversations. Run `--debug` to inspect decode details in `.agy_debug/`.
-
-**`Watch mode isn't reacting instantly`**
-→ Install `pip install watchdog` for event-based watching instead of polling.
-
-**Windows encoding errors in terminal**
-→ The exporter wraps stdout in UTF-8. Run `chcp 65001` to set the console code page to UTF-8.
+**Provider not found:**
+```bash
+convovault providers    # List all registered providers
+```
 
 ---
 
-## Contributing
+## 🤝 Contributing
 
-Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request.
+Contributions are very welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
-Quick summary:
-
-1. Fork the repository
-2. Create a feature branch
-3. Add tests for any new parser or feature
-4. Run `python run_tests.py` — all must pass
-5. Open a PR
+The fastest way to contribute is to implement a new provider — see [Plugin System](#-plugin-system) above.
 
 ---
 
-## License
+## 🔒 Security
 
-This project is licensed under the **MIT License** — see [LICENSE](LICENSE) for details.
-
-MIT was chosen because:
-- It is permissive and business-friendly
-- It allows use in commercial and private tools
-- It requires only attribution
-- It is the most common license for Python tooling projects
+Please read [SECURITY.md](SECURITY.md) before reporting vulnerabilities.
 
 ---
 
-## Credits
+## 📜 License
 
-Built and maintained by **[Owais Ali](https://github.com/owrew)**.
+MIT — see [LICENSE](LICENSE).
 
-Special thanks to the Antigravity team at Google DeepMind for building such a capable AI coding assistant, and to the Obsidian community for making personal knowledge management genuinely exciting.
+---
+
+## 👤 Author
+
+**AWAIS ALI RAFAQAT HUSSAIN** — [@owrew](https://github.com/owrew)
+
+> *"Your AI conversations are valuable knowledge. ConvoVault makes sure you never lose them."*
 
 ---
 
 <div align="center">
 
-**If this project is useful to you, please consider giving it a ⭐ on GitHub!**
-
-[![Star on GitHub](https://img.shields.io/github/stars/owrew/antigravity-obsidian-exporter?style=social)](https://github.com/owrew/antigravity-obsidian-exporter)
-
-<br/>
-
-*Made with ❤️ and too much reverse engineering*
+**[⭐ Star on GitHub](https://github.com/owrew/antigravity-obsidian-exporter)** · **[🐛 Report a Bug](https://github.com/owrew/antigravity-obsidian-exporter/issues/new?template=bug_report.md)** · **[💡 Request a Feature](https://github.com/owrew/antigravity-obsidian-exporter/issues/new?template=feature_request.md)**
 
 </div>
