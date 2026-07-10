@@ -95,7 +95,7 @@ _TECH_PATTERNS: List[Tuple[str, str, str]] = [
 ]
 
 _COMPILED = [(re.compile(pat, re.IGNORECASE), name, tag) for pat, name, tag in _TECH_PATTERNS]
-_BASE_TAGS = ['antigravity', 'ai-chat']
+_BASE_TAGS = ['convovault', 'ai-chat']
 
 def extract_topics(text: str) -> Tuple[List[str], List[str]]:
     seen_names: Set[str] = set()
