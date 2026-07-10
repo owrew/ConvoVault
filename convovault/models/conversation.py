@@ -7,6 +7,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
+
 @dataclass
 class ToolCall:
     name: str
@@ -24,6 +25,7 @@ class ToolCall:
             tool_action=args.get("toolAction", ""),
         )
 
+
 @dataclass
 class Step:
     index: int
@@ -36,6 +38,7 @@ class Step:
     tool_calls: List[ToolCall] = field(default_factory=list)
     truncated: bool = False
 
+
 @dataclass
 class ConversationMeta:
     conversation_id: str
@@ -46,12 +49,14 @@ class ConversationMeta:
     trajectory_id: Optional[str] = None
     last_viewed_at: Optional[int] = None # Unix timestamp
 
+
 @dataclass
 class Turn:
     num: int
     source: str            # User | Assistant
     timestamp: str         # ISO 8601 or empty
     steps: List[Step] = field(default_factory=list)
+
 
 @dataclass
 class ConversationIntelligence:
@@ -61,6 +66,7 @@ class ConversationIntelligence:
     files_mentioned: List[str] = field(default_factory=list)
     commands_executed: List[str] = field(default_factory=list)
     code_languages: List[str] = field(default_factory=list)
+
 
 @dataclass
 class Conversation:
@@ -72,6 +78,7 @@ class Conversation:
     turns: List[Turn] = field(default_factory=list)
     intelligence: ConversationIntelligence = field(default_factory=ConversationIntelligence)
     related_ids: List[str] = field(default_factory=list)
+
 
 # Backward compatibility alias
 ConversationTranscript = Conversation

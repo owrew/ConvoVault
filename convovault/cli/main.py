@@ -257,13 +257,13 @@ def handle_doctor(args):
         print(f"  Provider Resolve: {bad} FAILED to resolve '{provider}'")
 
     try:
-        import sqlite3
+        import sqlite3  # noqa: F401
         print(f"  sqlite3: {ok} module is available")
     except ImportError:
         print(f"  sqlite3: {bad} module missing")
 
     try:
-        import watchdog
+        import watchdog  # noqa: F401
         print(f"  watchdog: {ok} observer available for active watching")
     except ImportError:
         print("  watchdog: [--] missing, using fallback polling watcher")
