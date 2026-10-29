@@ -293,8 +293,10 @@ class StudioTests(unittest.TestCase):
     def test_cli_switches_to_the_selected_providers_default_path(self):
         from types import SimpleNamespace
         from unittest.mock import patch
-        from convovault.cli.main import _resolve_paths
-        with patch.dict("os.environ", {}, clear=True), patch("convovault.cli.main._load_saved_config", return_value={"provider": "antigravity", "source": "old-source"}), patch("convovault.cli.main._detect_source", return_value="codex-source") as detect:
+        from importlib import import_module
+        cli_module = import_module("convovault.cli.main")
+        _resolve_paths = cli_module._resolve_paths
+        with patch.dict("os.environ", {}, clear=True), patch.object(cli_module, "_load_saved_config", return_value={"provider": "antigravity", "source": "old-source"}), patch.object(cli_module, "_detect_source", return_value="codex-source") as detect:
             provider, source, _ = _resolve_paths(SimpleNamespace(provider="codex", source=None, vault=str(self.vault)))
         self.assertEqual((provider, source), ("codex", "codex-source"))
         detect.assert_called_once_with("codex")
