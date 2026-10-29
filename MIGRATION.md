@@ -1,3 +1,9 @@
+# Version 3 migration
+
+Version 3 creates a separate multi-provider manifest under `AI Vault/.convovault/library.json` and provider-specific folders. Existing version 2 notes and state are retained. No automatic deletion or renaming is performed. See [the Studio guide](docs/USER-GUIDE.md) before importing into an existing vault. The instructions below describe the earlier version 2 transition.
+
+---
+
 # Migration Guide: agy_exporter → ConvoVault
 
 > **Project renamed in v2.1.0** — The project has been rebranded and architecturally upgraded from `agy_exporter` to **ConvoVault**.

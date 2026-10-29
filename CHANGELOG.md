@@ -1,3 +1,17 @@
+# 3.0.0 — 2026-10-29
+
+- Added ConvoVault Studio with local source discovery, preview/selection, search, editable classification, and background sync.
+- Added Codex local sessions and archives, Claude Code, Gemini CLI and portable JSON adapters.
+- Fixed broken ChatGPT/Claude model construction, selected-branch handling, stale import caches and Open WebUI/legacy Ollama model construction.
+- Added whole-chat, exchange and individual-message exports; bilingual keyword rules and manual whole-chat overrides.
+- Added provider-separated note identities, merged catalogs, topic hubs, technology links and colored brain/topic Canvas maps.
+- Preserved edited files with incoming copies and correct backlinks; added atomic writes, locking and previous-manifest recovery.
+- Fixed the package build backend and CLI commands that lacked verbosity arguments; included GUI assets in the wheel and added a portable Windows launcher.
+- Added 30 integration/regression tests; 45 combined tests pass locally.
+- Local-model summaries, cloud-account downloads, proprietary app caches, tray/startup integration and semantic classification remain deferred.
+
+---
+
 # Changelog
 
 All notable changes to this project will be documented in this file.
