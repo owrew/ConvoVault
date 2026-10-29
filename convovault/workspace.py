@@ -126,18 +126,84 @@ def prepare_managed(vault, library, artifact_id, relative, stats):
     return relative
 
 
+def load_conversations(config):
+    provider = get_provider(config.provider)
+    if provider is None:
+        raise ValueError("Unknown provider: " + config.provider)
+    meta = provider.load_metadata_index(config)
+    ids = provider.discover_conversations(config)
+    selected = set(config.conv_filter) if config.conv_filter is not None else None
+    conversations, warnings = [], list(getattr(provider, "warnings", []))
+    for cid in ids:
+        if selected is not None and cid not in selected:
+            continue
+        try:
+            c = provider.read_conversation(cid, config)
+            if c and c.steps:
+                c.meta = c.meta or meta.get(cid)
+                c.intelligence = generate_intelligence(c)
+                conversations.append(c)
+            else:
+                warnings.append(f"{cid}: no readable messages")
+        except Exception as exc:
+            warnings.append(f"{cid}: {exc}")
+    return conversations, warnings
 
 
+def groups(steps, mode):
+    if mode == "messages":
+        return [[s] for s in steps]
+    result, current = [], []
+    for s in steps:
+        if s.step_type == "USER_INPUT" and current:
+            result.append(current)
+            current = []
+        current.append(s)
+    if current:
+        result.append(current)
+    return result
 
 
+def classify_conversation(c, rules, overrides):
+    key = c.provider + ":" + c.conv_id
+    text = (c.meta.title if c.meta else "") + "\n" + "\n".join(s.content for s in c.steps if s.step_type in ("USER_INPUT", "PLANNER_RESPONSE"))
+    return classify(text, rules, overrides.get(key))
 
 
+def describe(c, rules=None, overrides=None):
+    classification = classify_conversation(c, rules, overrides or {})
+    return {"id": c.conv_id, "key": c.provider + ":" + c.conv_id, "provider": c.provider,
+            "title": c.meta.title if c.meta else c.conv_id, "steps": len(c.steps),
+            "exchanges": len(groups(c.steps, "exchanges")), "source": c.source_file,
+            "updated": (c.steps[-1].created_at if c.steps else "") or timestamp(c.meta.updated_at if c.meta else None), "classification": classification,
+            "preview": next((s.content[:240] for s in c.steps if s.step_type == "USER_INPUT"), "")}
 
 
+def frontmatter(data):
+    # JSON scalars/arrays are valid YAML and safely escape arbitrary titles.
+    return "---\n" + "\n".join(f"{key}: {json.dumps(value, ensure_ascii=False)}" for key, value in data.items()) + "\n---\n\n"
 
 
+def render_steps(steps, config):
+    body, results = [], [0]
+    for s in steps:
+        role = "User" if s.step_type == "USER_INPUT" else "Assistant" if s.step_type == "PLANNER_RESPONSE" else "System" if s.step_type == "SYSTEM_MESSAGE" else "Tool"
+        body.append(f"### {role}" + (f" · {s.created_at}" if s.created_at else ""))
+        if s.step_type == "SYSTEM_MESSAGE":
+            body.append(s.content)
+        else:
+            formatted = _format_step(s, config.no_tool_results, config.max_tool_results_per_turn, results, config.max_tool_output_length)
+            if not formatted and s.content and s.step_type not in TOOL_RESULT_TYPES:
+                # Retain records introduced by new provider versions as plain text.
+                formatted = s.content
+            body.append(formatted)
+    return "\n\n".join(body) + "\n"
 
 
+def wikilink(path, label=None):
+    clean = str(path).removesuffix(".md").replace("|", " ").replace("]", " ")
+    label = str(label or Path(path).stem).replace("|", " ").replace("]", " ").replace("\n", " ")
+    return f"[[{clean}|{label}]]"
 
 
 
