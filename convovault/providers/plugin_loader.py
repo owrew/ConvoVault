@@ -17,6 +17,7 @@ from .openwebui import OpenWebUIProvider
 from .ollama import OllamaProvider
 from .gemini import GeminiProvider
 from .librechat import LibreChatProvider
+from .portable import adapter
 
 log = logging.getLogger(__name__)
 
@@ -30,6 +31,10 @@ _PROVIDERS: Dict[str, Type[BaseProvider]] = {
     "gemini": GeminiProvider,
     "librechat": LibreChatProvider,
 }
+
+# Portable readers replace the incomplete export adapters and add local agents.
+for _name in ("codex",):
+    _PROVIDERS[_name] = adapter(_name)
 
 
 def get_provider(name: str) -> Optional[BaseProvider]:
