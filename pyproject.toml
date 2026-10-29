@@ -1,13 +1,14 @@
 [build-system]
-requires = ["setuptools>=68", "wheel"]
-build-backend = "setuptools.backends.legacy:build"
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "convovault"
-version = "2.1.0"
+version = "3.0.0"
 description = "Universal AI conversation knowledge vault — archive, sync, search, and graph your AI chats in Obsidian."
 readme = "README.md"
-license = { file = "LICENSE" }
+license = "MIT"
+license-files = ["LICENSE"]
 requires-python = ">=3.9"
 authors = [
     { name = "AWAIS ALI RAFAQAT HUSSAIN", email = "owrew@users.noreply.github.com" }
@@ -22,7 +23,6 @@ classifiers = [
     "Environment :: Console",
     "Intended Audience :: Developers",
     "Intended Audience :: End Users/Desktop",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.9",
@@ -37,24 +37,29 @@ dependencies = []
 
 [project.optional-dependencies]
 watch = ["watchdog>=3.0"]
+desktop = ["pywebview>=5.4"]
 dev = [
     "flake8>=7.0",
     "pre-commit>=3.0",
 ]
 
 [project.urls]
-Homepage = "https://github.com/owrew/antigravity-obsidian-exporter"
-Repository = "https://github.com/owrew/antigravity-obsidian-exporter"
-"Bug Tracker" = "https://github.com/owrew/antigravity-obsidian-exporter/issues"
-Changelog = "https://github.com/owrew/antigravity-obsidian-exporter/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/owrew/ConvoVault"
+Repository = "https://github.com/owrew/ConvoVault"
+"Bug Tracker" = "https://github.com/owrew/ConvoVault/issues"
+Changelog = "https://github.com/owrew/ConvoVault/blob/main/CHANGELOG.md"
 
 [project.scripts]
 convovault = "convovault.cli.main:main"
+convovault-studio = "convovault.gui.server:main"
 agy-exporter = "agy_exporter.__main__:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["convovault*", "agy_exporter*"]
+
+[tool.setuptools.package-data]
+"convovault.gui" = ["static/*"]
 
 [tool.flake8]
 max-line-length = 120

@@ -13,4 +13,4 @@ from .exporter import run_export, export_one  # noqa: F401
 from .watcher import start_watch  # noqa: F401
 from .state import ExportState  # noqa: F401
 
-__version__ = "2.1.0"
+__version__ = "3.0.0"
