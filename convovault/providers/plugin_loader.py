@@ -33,7 +33,7 @@ _PROVIDERS: Dict[str, Type[BaseProvider]] = {
 }
 
 # Portable readers replace the incomplete export adapters and add local agents.
-for _name in ("codex",):
+for _name in ("codex", "claude-code"):
     _PROVIDERS[_name] = adapter(_name)
 
 
