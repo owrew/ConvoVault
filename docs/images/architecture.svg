@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="690" viewBox="0 0 1120 690" role="img" aria-labelledby="title"><title id="title">From read-only sources to a connected Obsidian vault</title><defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#8193b0"/></marker></defs><rect width="100%" height="100%" rx="20" fill="#f7f9fc"/>
+<text x="560.0" y="34" text-anchor="middle" fill="#203451" font-family="Segoe UI,Arial,sans-serif" font-weight="600" font-size="21">From read-only sources to a connected Obsidian vault</text>
+<path d="M152 135 V175 H180 V230" fill="none" stroke="#8193b0" stroke-width="1.6" marker-end="url(#arrow)"/>
+<path d="M422 135 V175 H180 V230" fill="none" stroke="#8193b0" stroke-width="1.6" marker-end="url(#arrow)"/>
+<path d="M692 135 V175 H180 V230" fill="none" stroke="#8193b0" stroke-width="1.6" marker-end="url(#arrow)"/>
+<path d="M962 135 V175 H180 V230" fill="none" stroke="#8193b0" stroke-width="1.6" marker-end="url(#arrow)"/>
+<path d="M310 270 H430" fill="none" stroke="#8193b0" stroke-width="1.6" marker-end="url(#arrow)"/>
+<path d="M690 270 H810" fill="none" stroke="#8193b0" stroke-width="1.6" marker-end="url(#arrow)"/>
+<path d="M940 310 V370" fill="none" stroke="#8193b0" stroke-width="1.6" marker-end="url(#arrow)"/>
+<path d="M810 410 H690" fill="none" stroke="#8193b0" stroke-width="1.6" marker-end="url(#arrow)"/>
+<path d="M560 450 V495 H180 V540" fill="none" stroke="#8193b0" stroke-width="1.6" marker-end="url(#arrow)"/>
+<path d="M560 450 V540" fill="none" stroke="#8193b0" stroke-width="1.6" marker-end="url(#arrow)"/>
+<path d="M560 450 V495 H940 V540" fill="none" stroke="#8193b0" stroke-width="1.6" marker-end="url(#arrow)"/>
+<rect x="30" y="65" width="245" height="70" rx="13" fill="#eef2f8" stroke="#a4b3ca" stroke-width="1.5"/>
+<text x="152.5" y="88.0" text-anchor="middle" dominant-baseline="middle" font-family="Segoe UI,Arial,sans-serif" font-size="18" fill="#203451">Codex / Claude Code</text>
+<text x="152.5" y="112.0" text-anchor="middle" dominant-baseline="middle" font-family="Segoe UI,Arial,sans-serif" font-size="18" fill="#203451">Local JSONL</text>
+<rect x="300" y="65" width="245" height="70" rx="13" fill="#eef2f8" stroke="#a4b3ca" stroke-width="1.5"/>
+<text x="422.5" y="88.0" text-anchor="middle" dominant-baseline="middle" font-family="Segoe UI,Arial,sans-serif" font-size="18" fill="#203451">ChatGPT / Claude</text>
+<text x="422.5" y="112.0" text-anchor="middle" dominant-baseline="middle" font-family="Segoe UI,Arial,sans-serif" font-size="18" fill="#203451">Export JSON or ZIP</text>
+<rect x="570" y="65" width="245" height="70" rx="13" fill="#eef2f8" stroke="#a4b3ca" stroke-width="1.5"/>
+<text x="692.5" y="88.0" text-anchor="middle" dominant-baseline="middle" font-family="Segoe UI,Arial,sans-serif" font-size="18" fill="#203451">Gemini CLI</text>
+<text x="692.5" y="112.0" text-anchor="middle" dominant-baseline="middle" font-family="Segoe UI,Arial,sans-serif" font-size="18" fill="#203451">Portable JSON</text>
+<rect x="840" y="65" width="245" height="70" rx="13" fill="#eef2f8" stroke="#a4b3ca" stroke-width="1.5"/>
+<text x="962.5" y="88.0" text-anchor="middle" dominant-baseline="middle" font-family="Segoe UI,Arial,sans-serif" font-size="18" fill="#203451">Antigravity</text>
+<text x="962.5" y="112.0" text-anchor="middle" dominant-baseline="middle" font-family="Segoe UI,Arial,sans-serif" font-size="18" fill="#203451">Open WebUI</text>
+<rect x="50" y="230" width="260" height="80" rx="13" fill="#edf2ff" stroke="#769dff" stroke-width="1.5"/>
+<text x="180.0" y="270.0" text-anchor="middle" dominant-baseline="middle" font-family="Segoe UI,Arial,sans-serif" font-size="18" fill="#203451">Provider adapters</text>
+<rect x="430" y="230" width="260" height="80" rx="13" fill="#edf2ff" stroke="#769dff" stroke-width="1.5"/>
+<text x="560.0" y="258.0" text-anchor="middle" dominant-baseline="middle" font-family="Segoe UI,Arial,sans-serif" font-size="18" fill="#203451">Normalized</text>
+<text x="560.0" y="282.0" text-anchor="middle" dominant-baseline="middle" font-family="Segoe UI,Arial,sans-serif" font-size="18" fill="#203451">conversations</text>
+<rect x="810" y="230" width="260" height="80" rx="13" fill="#f5ecff" stroke="#bd8ee8" stroke-width="1.5"/>
+<text x="940.0" y="258.0" text-anchor="middle" dominant-baseline="middle" font-family="Segoe UI,Arial,sans-serif" font-size="18" fill="#203451">Editable rules</text>
+<text x="940.0" y="282.0" text-anchor="middle" dominant-baseline="middle" font-family="Segoe UI,Arial,sans-serif" font-size="18" fill="#203451">Source analysis</text>
+<rect x="810" y="370" width="260" height="80" rx="13" fill="#fff7e5" stroke="#e6b65b" stroke-width="1.5"/>
+<text x="940.0" y="398.0" text-anchor="middle" dominant-baseline="middle" font-family="Segoe UI,Arial,sans-serif" font-size="18" fill="#203451">Studio preview</text>
+<text x="940.0" y="422.0" text-anchor="middle" dominant-baseline="middle" font-family="Segoe UI,Arial,sans-serif" font-size="18" fill="#203451">Select conversations</text>
+<rect x="430" y="370" width="260" height="80" rx="13" fill="#eaf5f1" stroke="#58bbad" stroke-width="1.5"/>
+<text x="560.0" y="398.0" text-anchor="middle" dominant-baseline="middle" font-family="Segoe UI,Arial,sans-serif" font-size="18" fill="#203451">Managed export</text>
+<text x="560.0" y="422.0" text-anchor="middle" dominant-baseline="middle" font-family="Segoe UI,Arial,sans-serif" font-size="18" fill="#203451">Preserve user edits</text>
+<rect x="50" y="540" width="260" height="80" rx="13" fill="#edf2ff" stroke="#769dff" stroke-width="1.5"/>
+<text x="180.0" y="568.0" text-anchor="middle" dominant-baseline="middle" font-family="Segoe UI,Arial,sans-serif" font-size="18" fill="#203451">Whole chats</text>
+<text x="180.0" y="592.0" text-anchor="middle" dominant-baseline="middle" font-family="Segoe UI,Arial,sans-serif" font-size="18" fill="#203451">Smaller Markdown notes</text>
+<rect x="430" y="540" width="260" height="80" rx="13" fill="#eaf5f1" stroke="#58bbad" stroke-width="1.5"/>
+<text x="560.0" y="568.0" text-anchor="middle" dominant-baseline="middle" font-family="Segoe UI,Arial,sans-serif" font-size="18" fill="#203451">Merged library</text>
+<text x="560.0" y="592.0" text-anchor="middle" dominant-baseline="middle" font-family="Segoe UI,Arial,sans-serif" font-size="18" fill="#203451">Topic / technology hubs</text>
+<rect x="810" y="540" width="260" height="80" rx="13" fill="#f5ecff" stroke="#bd8ee8" stroke-width="1.5"/>
+<text x="940.0" y="568.0" text-anchor="middle" dominant-baseline="middle" font-family="Segoe UI,Arial,sans-serif" font-size="18" fill="#203451">Brain and topic</text>
+<text x="940.0" y="592.0" text-anchor="middle" dominant-baseline="middle" font-family="Segoe UI,Arial,sans-serif" font-size="18" fill="#203451">Obsidian Canvas maps</text>
+</svg>

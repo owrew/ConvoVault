@@ -12,7 +12,7 @@
 ![Local tests](https://img.shields.io/badge/Local_checks-45_tests_passed-41856D?style=flat-square)
 [![MIT](https://img.shields.io/badge/License-MIT-526CBE?style=flat-square)](LICENSE)
 
-[Get started](#-get-started) · [See the interface](#-meet-studio) · [Supported sources](#-bring-your-conversations) · [How it works](#-how-it-fits-together) · [User guide](docs/USER-GUIDE.md)
+[Get started](#-get-started) · [See the interface](#-meet-studio) · [Supported sources](#-bring-your-conversations) · [How it works](#architecture) · [User guide](docs/USER-GUIDE.md)
 
 </div>
 
@@ -118,6 +118,11 @@ See the [source-format reference](docs/SOURCE-FORMATS.md) for schema details, pa
 
 Smaller notes receive their own keyword classifications and parent/previous/next links. An unfinished prompt remains an exchange. Leading assistant or tool records are retained rather than silently discarded.
 
+<img src="docs/images/note-modes.svg" alt="Whole chats, exchange notes, and individual messages" width="100%" />
+
+<details>
+<summary>View the Mermaid diagram source</summary>
+
 ```mermaid
 flowchart LR
     Chat["One conversation"] --> Whole["Complete chat note"]
@@ -127,6 +132,8 @@ flowchart LR
     Chat --> Messages["Individual message notes"]
     Whole -. "parent and part links" .-> Exchange
 ```
+
+</details>
 
 Changing modes keeps previous output in the vault. Current indexes point to the newly selected mode; ConvoVault does not delete earlier notes.
 
@@ -156,6 +163,11 @@ ConvoVault generates three complementary ways to explore:
 
 Topic and technology hub notes create real links for Obsidian's ordinary graph. Related-conversation links identify shared technologies; they are not claims of model-inferred semantic similarity.
 
+<img src="docs/images/knowledge-graph.svg" alt="Example links between conversations, categories, technologies, and exchange notes" width="100%" />
+
+<details>
+<summary>View the Mermaid diagram source</summary>
+
 ```mermaid
 flowchart TD
     Library["Conversation library"] --> Development["Development hub"]
@@ -175,13 +187,22 @@ flowchart TD
     class Research,Sources research
 ```
 
+</details>
+
 *Illustrative relationships based on the included sample data.*
 
 > **About the brain shape:** it is an editable Obsidian Canvas, not a replacement for the built-in graph's force layout. `AI Vault/Graph colors.md` explains how to add corresponding graph color groups. Existing `.obsidian` settings are not changed.
 
 Exported maps show up to **500 recent conversations**; the Markdown library includes every imported conversation. The GUI displays **100 results per page**. Editing a generated Canvas is supported: a later import preserves it and creates an incoming generated copy.
 
+<a name="architecture"></a>
+
 ## ⚙️ How it fits together
+
+<img src="docs/images/architecture.svg" alt="ConvoVault architecture from read-only sources to Obsidian notes and Canvas maps" width="100%" />
+
+<details>
+<summary>View the Mermaid diagram source</summary>
 
 ```mermaid
 flowchart TB
@@ -204,6 +225,8 @@ flowchart TB
     Maps --> Obsidian
     Notes --> Obsidian
 ```
+
+</details>
 
 The core and browser-based Studio use Python's standard library. Optional native-window dependencies are separate. Provider plugins can still use the existing `convovault.providers` entry-point interface.
 
