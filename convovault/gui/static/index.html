@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="cv-token" content="__TOKEN__">
+  <title>ConvoVault Studio</title><link rel="stylesheet" href="/style.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+<aside class="sidebar">
+  <a class="brand" href="/" aria-label="ConvoVault home"><span class="brandmark">cv</span><span>ConvoVault<small>Studio / 3.0</small></span></a>
+  <button class="nav active" data-view="library"><span>▦</span> Conversation library</button>
+  <button class="nav" data-view="map"><span>◉</span> Neural map</button>
+  <button class="nav" id="sources-button"><span>⇄</span> Sources & import</button>
+  <button class="nav" id="rules-button"><span>⌘</span> Classification rules</button>
+  <div class="sidebar-section"><h2>Your sources</h2><div id="source-list"><p class="muted">Discovering local sources…</p></div></div>
+  <div class="sidebar-bottom"><div class="local-indicator"><i></i> Everything stays on this device</div><p>Your chats become a library you own.</p><button class="quiet" id="settings-button">Settings</button></div>
+</aside>
+<main>
+  <header class="topbar"><span id="breadcrumb">Workspace <b>/</b> Conversation library</span><div><span id="sync-status" class="status-pill">Sync paused</span><button class="icon-button" id="refresh-button" aria-label="Refresh library">↻</button></div></header>
+  <section class="intro"><div><p class="eyebrow">A place for every conversation</p><h1>Your thinking,<br> beautifully connected.</h1><p class="intro-copy">Bring your AI chats together. Find the useful parts.<br>Let your next idea start where the last one ended.</p><div class="intro-actions"><button class="primary" id="import-button">＋ Connect a source</button><button class="secondary" id="toggle-sync">Enable background sync</button></div></div>
+    <div class="brain-panel"><svg id="brain" viewBox="0 0 620 360" role="group" aria-label="Interactive conversation map"></svg><div class="map-caption"><span class="legend-dot"></span><span id="brain-caption">A map grows as you import conversations</span><button id="expand-map" aria-label="Expand neural map">⤢</button></div></div>
+  </section>
+  <section class="workspace" aria-label="Conversations">
+    <div class="section-title"><div><h2 id="list-title">Conversation library <span id="total">0</span></h2><p id="list-subtitle">Search your imported conversations and their linked notes.</p></div><div class="segmented" aria-label="Library source"><button id="library-tab" class="selected">Imported library</button><button id="preview-tab">Source preview</button></div></div>
+    <div class="toolbar"><label class="search-field"><span>⌕</span><input id="search" type="search" placeholder="Search conversations, ideas, or a phrase…" aria-label="Search conversations"></label><select id="category" aria-label="Filter by category"><option value="">All categories</option></select><button class="secondary" id="export-selected" disabled>Export selected</button></div>
+    <div id="selection-bar" class="selection-bar" hidden><label><input type="checkbox" id="select-all"> Select this page</label><span id="selection-count">0 selected</span></div>
+    <div id="conversation-list" class="conversation-list"></div>
+    <div class="pagination"><button class="quiet" id="previous" disabled>Previous</button><span id="page-label"></span><button class="quiet" id="next" disabled>Next</button></div>
+  </section>
+  <section id="map-workspace" class="map-workspace" hidden><h2>Inside your knowledge map</h2><p>Each dot opens a conversation. Color follows its category. Export creates two editable Canvas maps in Obsidian.</p><div id="map-legend"></div><p class="muted">Showing up to 100 conversations from the current page. The exported Canvas maps show up to 500; the Markdown library includes every conversation.</p></section>
+  <footer><span>Local first. Open formats. Yours to keep.</span><span>Markdown + Obsidian Canvas</span></footer>
+</main>
+<dialog id="connect-dialog" class="wide-dialog">
+  <form method="dialog" class="dialog-header"><div><h2>Connect your conversations</h2><p>Preview first, then choose what goes into your vault.</p></div><button class="icon-button" aria-label="Close">×</button></form>
+  <div class="dialog-body"><label>Assistant<select id="provider"><option value="codex">Codex desktop / CLI</option><option value="chatgpt">ChatGPT export</option><option value="claude">Claude.ai export</option><option value="claude-code">Claude Code</option><option value="gemini">Gemini CLI</option><option value="antigravity">Google Antigravity</option><option value="openwebui">Open WebUI database</option><option value="librechat">LibreChat JSON</option><option value="generic">Other / portable messages JSON</option><option value="ollama">Ollama / LM Studio legacy JSON</option></select></label>
+    <p id="provider-hint" class="field-hint"></p>
+    <label>Conversation source<div class="input-row"><input id="source-path" placeholder="Full folder or export file path"><button type="button" class="secondary" id="source-folder">Folder</button><button type="button" class="secondary" id="source-file">File</button></div></label>
+    <label>Obsidian vault<div class="input-row"><input id="vault-path" placeholder="Choose an existing vault or a new folder"><button type="button" class="secondary" id="vault-folder">Browse</button></div></label>
+    <div class="field-note">ConvoVault writes inside <strong>AI Vault</strong>. Existing edited notes are preserved. Your source transcripts stay read-only.</div>
+    <fieldset><legend>How should your notes be organized?</legend><div class="mode-grid">
+      <label class="mode-option"><input type="radio" name="note-mode" value="conversation"><span><strong>Whole conversation</strong><small>One complete Markdown note per chat</small></span></label>
+      <label class="mode-option"><input type="radio" name="note-mode" value="exchanges"><span><strong>Each exchange</strong><small>A user prompt and its responses in one note</small></span></label>
+      <label class="mode-option"><input type="radio" name="note-mode" value="messages"><span><strong>Every message</strong><small>Separate user, assistant, and tool notes</small></span></label>
+      <label class="mode-option"><input type="radio" name="note-mode" value="both"><span><strong>Whole chat + exchanges</strong><small>Keep the full context and linked smaller parts</small></span></label>
+    </div></fieldset>
+    <label class="check-label"><input id="create-maps" type="checkbox" checked> Create colored brain and topic Canvas maps</label>
+    <div id="source-availability" class="field-note"></div>
+  </div><div class="dialog-footer"><span>Preview does not write to your vault.</span><button class="primary" id="scan-button">Preview conversations</button></div>
+</dialog>
+<dialog id="rules-dialog" class="wide-dialog">
+  <form method="dialog" class="dialog-header"><div><h2>Give your ideas a home</h2><p>Edit category names, colors, and the phrases that connect them.</p></div><button class="icon-button" aria-label="Close">×</button></form>
+  <div class="dialog-body"><div class="field-note">Classification runs locally using matched words and phrases in English, Arabic, or any language you add. It is a suggestion, with visible evidence. Change a conversation's category from its preview.</div><div id="rule-list"></div><button class="secondary" id="add-rule">＋ Add a category</button></div>
+  <div class="dialog-footer"><button class="quiet" id="reset-rules">Restore defaults</button><button class="primary" id="save-rules">Save rules</button></div>
+</dialog>
+<dialog id="note-dialog" class="note-dialog">
+  <form method="dialog" class="dialog-header"><div><h2 id="note-title">Conversation</h2><p id="note-details"></p></div><button class="icon-button" aria-label="Close">×</button></form>
+  <div class="note-controls"><label>Category <select id="note-category"></select></label><button class="secondary" id="save-category">Save category</button><span id="note-evidence"></span><button class="quiet" id="toggle-markdown">View Markdown</button></div><div id="note-reader" class="note-reader" dir="auto"></div><pre id="note-content" dir="auto" hidden></pre>
+</dialog>
+<dialog id="settings-dialog"><form method="dialog" class="dialog-header"><h2>Workspace settings</h2><button class="icon-button" aria-label="Close">×</button></form><div class="dialog-body"><label>Background sync interval (seconds)<input id="sync-interval" type="number" min="30" max="86400"></label><p>Sync watches the currently configured source while Studio is running. New and changed chats are imported automatically. Reopened Studio starts with syncing paused.</p><p>Changing rules or a saved category updates the preview immediately. Re-export that source to update existing Markdown notes.</p><p>Old notes from a previous split mode stay in the vault. Current indexes link to the latest mode.</p><button id="stop-studio" class="secondary">Close Studio server</button></div><div class="dialog-footer"><button id="save-settings" class="primary">Save settings</button></div></dialog>
+<div id="activity" class="activity" role="status" hidden><div class="spinner"></div><div><strong id="activity-title">Working…</strong><span id="activity-detail">Your source files stay on your device.</span></div></div>
+<div id="toast" class="toast" role="status" hidden></div>
+</body></html>
