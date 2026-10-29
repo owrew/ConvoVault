@@ -214,7 +214,7 @@ def _generate_summary(conv_id: str, steps: List[Step]) -> str:
                 req += '.'
             parts.append(f"**User request:** {req}")
         else:
-            req_list = "\n".join(f"  {i+1}. {r}" for i, r in enumerate(user_requests[:10]))
+            req_list = "\n".join(f"  {i + 1}. {r}" for i, r in enumerate(user_requests[:10]))
             if len(user_requests) > 10:
                 req_list += f"\n  … and {len(user_requests) - 10} more"
             parts.append(f"**User requests ({len(user_requests)} total):**\n{req_list}")
@@ -225,7 +225,7 @@ def _generate_summary(conv_id: str, steps: List[Step]) -> str:
         top_tools = sorted(tool_name_counts.items(), key=lambda x: -x[1])[:8]
         tool_str = ", ".join(f"`{name}` ×{count}" for name, count in top_tools)
         if len(tool_name_counts) > 8:
-            tool_str += f", …+{len(tool_name_counts)-8} more"
+            tool_str += f", …+{len(tool_name_counts) - 8} more"
         parts.append(f"**Tool calls:** {total_calls} total — {tool_str}")
 
     # 3. Files written
@@ -245,7 +245,7 @@ def _generate_summary(conv_id: str, steps: List[Step]) -> str:
     if errors:
         err_list = "; ".join(errors[:3])
         if len(errors) > 3:
-            err_list += f" … +{len(errors)-3} more"
+            err_list += f" … +{len(errors) - 3} more"
         parts.append(f"**Issues encountered:** {err_list}")
 
     if not parts:
