@@ -244,5 +244,140 @@ def build_canvas(entries, layout):
     return {"nodes": nodes, "edges": edges}
 
 
+def export_library(config):
+    rules = validate_rules(config.classification_rules if config.classification_rules is not None else DEFAULT_RULES)
+    conversations, warnings = load_conversations(config)
+    stats = {"written": 0, "skipped": 0, "failed": len(warnings), "total": len(conversations),
+             "files_written": 0, "files_skipped": 0, "conflicts": 0, "warnings": warnings}
+    if not conversations:
+        if not warnings:
+            stats["warnings"].append("No conversations found. Choose a supported export or local session folder.")
+        return stats
+    source, vault = Path(config.source_dir).resolve(), Path(config.vault_dir).resolve()
+    if vault == source or vault.is_relative_to(source) or source.is_relative_to(vault / "AI Vault"):
+        raise ValueError("Choose a vault separate from the source folder to prevent importing generated notes")
+    with vault_lock(vault):
+        library = load_library(vault)
+        known = dict(library["conversations"])
+        for c in conversations:
+            entry = describe(c, rules, config.category_overrides)
+            entry["technologies"] = c.intelligence.technologies
+            entry["topics"] = c.intelligence.topics
+            entry["summary"] = c.intelligence.summary
+            base = f"{slug(entry['title'])}--{digest(entry['key'])[:12]}"
+            entry["path"] = prepare_managed(vault, library, entry["key"], f"AI Vault/Chats/{c.provider}/{base}.md", stats)
+            known[entry["key"]] = entry
+        hub_paths = {}
+        for entry in known.values():
+            names = [entry["classification"]["primary"]] + entry.get("technologies", [])
+            for name in names:
+                if name not in hub_paths:
+                    hub_paths[name] = prepare_managed(vault, library, "hub:" + name,
+                                                      f"AI Vault/Topics/{slug(name)}--{digest(name)[:8]}.md", stats)
+        for c in conversations:
+            entry = known[c.provider + ":" + c.conv_id]
+            key = entry["key"]
+            base = f"{slug(entry['title'])}--{digest(key)[:12]}"
+            classification = entry["classification"]
+            common = {"id": key, "title": entry["title"], "source": c.provider, "conversation_id": c.conv_id,
+                      "category": classification["primary"], "categories": classification["categories"],
+                      "classification_method": classification["method"], "tags": ["ai-chat", c.provider, "category/" + re.sub(r"\W+", "-", classification["primary"].lower()).strip("-")],
+                      "created": c.steps[0].created_at or timestamp(c.meta.created_at if c.meta else None), "updated": entry["updated"]}
+            old_files_written = stats["files_written"]
+            children = []
+            if config.note_mode != "conversation":
+                mode = "messages" if config.note_mode == "messages" else "exchanges"
+                chunks = groups(c.steps, mode)
+                parent_path = entry["path"]
+                planned_children = [prepare_managed(vault, library, f"{key}:{mode}:{number}",
+                                    f"AI Vault/{mode.title()}/{c.provider}/{digest(key)[:12]}/{number:04}.md", stats)
+                                    for number in range(1, len(chunks) + 1)]
+                for number, chunk in enumerate(chunks, 1):
+                    title = f"{entry['title']} · {mode[:-1]} {number}"
+                    part_class = classify("\n".join(s.content for s in chunk), rules)
+                    metadata = {**common, "id": f"{key}:{mode}:{number}", "title": title, "category": part_class["primary"],
+                                "categories": part_class["categories"], "classification_method": part_class["method"],
+                                "tags": ["ai-chat", c.provider, "category/" + re.sub(r"\W+", "-", part_class["primary"].lower()).strip("-")],
+                                "note_type": mode[:-1], "sequence": number,
+                                "created": chunk[0].created_at, "updated": chunk[-1].created_at}
+                    content = frontmatter(metadata) + f"# {title}\n\n" + "Conversation: " + wikilink(parent_path, entry["title"]) + "\n\n" + render_steps(chunk, config)
+                    navigation = []
+                    if number > 1:
+                        navigation.append(wikilink(planned_children[number - 2], "Previous part"))
+                    if number < len(chunks):
+                        navigation.append(wikilink(planned_children[number], "Next part"))
+                    content += "\n" + " · ".join(navigation) + "\n"
+                    relative = planned_children[number - 1]
+                    actual = write_managed(vault, library, f"{key}:{mode}:{number}", relative, content, stats)
+                    children.append(actual)
+            common["note_type"] = "conversation" if config.note_mode in ("conversation", "both") else "conversation-index"
+            content = frontmatter(common) + f"# {entry['title']}\n\n"
+            content += f"Provider: {c.provider}  \nCategory: {classification['primary']} ({classification['method']})\n\n"
+            names = [classification["primary"]] + entry["technologies"]
+            content += "Connections: " + " · ".join(wikilink(hub_paths[name], name) for name in dict.fromkeys(names)) + "\n\n"
+            if c.intelligence.summary:
+                content += "## Extractive overview\n\n" + c.intelligence.summary + "\n\n"
+            similar = []
+            for other_key, other in known.items():
+                if other_key == key:
+                    continue
+                shared = set(entry["technologies"]) & set(other.get("technologies", []))
+                if shared:
+                    similar.append((len(shared), other, shared))
+            if similar:
+                content += "## Related conversations\n\n"
+                for _, other, shared in sorted(similar, key=lambda row: (-row[0], row[1]["key"]))[:5]:
+                    content += "- " + wikilink(other["path"], other["title"]) + " — shared technologies: " + ", ".join(sorted(shared)) + "\n"
+                content += "\n"
+            if classification["evidence"]:
+                content += "Matched phrases: " + "; ".join(f"{name}: {', '.join(hits)}" for name, hits in classification["evidence"].items()) + "\n\n"
+            if children:
+                content += "## Linked notes\n\n" + "\n".join(f"- {wikilink(p, f'Part {i}')}" for i, p in enumerate(children, 1)) + "\n\n"
+            if config.note_mode in ("conversation", "both"):
+                content += render_steps(c.steps, config)
+            content += f"\nSource transcript: `{c.source_file}`\n\n*Generated by ConvoVault 3. Source files are read-only.*\n"
+            entry["path"] = write_managed(vault, library, key, f"AI Vault/Chats/{c.provider}/{base}.md", content, stats)
+            entry["children"] = children
+            entry["note_mode"] = config.note_mode
+            library["conversations"][key] = entry
+            stats["written" if stats["files_written"] > old_files_written else "skipped"] += 1
+        entries = list(library["conversations"].values())
+        for name, relative in hub_paths.items():
+            matching = [entry for entry in entries if entry["classification"]["primary"] == name or name in entry.get("technologies", [])]
+            text = frontmatter({"note_type": "topic", "title": name}) + "# " + name + "\n\n"
+            text += "\n".join("- " + wikilink(entry["path"], entry["title"]) for entry in matching) + "\n"
+            write_managed(vault, library, "hub:" + name, relative, text, stats)
+        lines = ["# ConvoVault library", "", f"{len(entries)} conversations across all imported sources.", "",
+                 "[[AI Vault/Brain.canvas|Brain map]] · [[AI Vault/Topics.canvas|Topic map]]", ""]
+        for category in sorted(set(e["classification"]["primary"] for e in entries)):
+            lines += ["## " + category, ""]
+            for entry in sorted(entries, key=lambda e: e.get("updated", ""), reverse=True):
+                if entry["classification"]["primary"] == category:
+                    lines.append(f"- {wikilink(entry['path'], entry['title'])} ({entry['provider']})")
+            lines.append("")
+        write_managed(vault, library, "index:library", "AI Vault/Library.md", "\n".join(lines), stats)
+        if config.create_maps:
+            for layout, filename in (("brain", "Brain.canvas"), ("topics", "Topics.canvas")):
+                # A very large vault remains usable through the complete Markdown library.
+                limit = 500
+                if len(entries) > limit:
+                    stats["warnings"].append(f"{filename}: showing the 500 most recent conversations; Library.md contains all")
+                mapped = sorted(entries, key=lambda e: e.get("updated", ""), reverse=True)[:limit]
+                write_managed(vault, library, "map:" + layout, "AI Vault/" + filename,
+                              json.dumps(build_canvas(mapped, layout), ensure_ascii=False, indent=2) + "\n", stats)
+        graph_guide = "# Color your Obsidian graph\n\nOpen Graph view → settings → Groups → New group. Use the following searches and colors.\n\n"
+        for rule in rules:
+            tag = re.sub(r"\W+", "-", rule["name"].lower()).strip("-")
+            graph_guide += f"- `tag:#category/{tag}` — {rule['color']} ({rule['name']})\n"
+        graph_guide += "\nThe normal graph uses Obsidian's force layout. Open Brain.canvas for a fixed stylized brain layout, or Topics.canvas for category columns. No existing Obsidian settings are changed.\n"
+        write_managed(vault, library, "guide:graph", "AI Vault/Graph colors.md", graph_guide, stats)
+        # Keep the previous manifest for crash recovery. Sources and edited notes are never deleted.
+        manifest = library_path(vault)
+        if manifest.exists():
+            atomic_text(manifest.with_suffix(".previous.json"), manifest.read_text(encoding="utf-8"))
+        atomic_text(manifest, json.dumps(library, ensure_ascii=False, indent=2) + "\n")
+    stats["library_total"] = len(entries)
+    stats["vault"] = str(vault)
+    return stats
 
 
