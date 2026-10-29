@@ -100,3 +100,10 @@ logs/
 .DS_Store
 Thumbs.db
 desktop.ini
+# Local release verification and build tools
+.build-tools/
+release/
+build/
+*.spec
+.studio-qa/
+*.egg-info/
