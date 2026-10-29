@@ -10,10 +10,8 @@ import logging
 import os
 import sys
 from ..config.exporter import ExporterConfig
-from ..exporter.engine import run_export, export_one
+from ..exporter.engine import run_export
 from ..providers.plugin_loader import get_provider, list_providers
-from ..state.state import ExportState
-from ..watcher.watcher import start_watch
 
 # ── Config file path ─────────────────────────────────────────────────────────
 
@@ -58,7 +56,16 @@ def _is_valid_source(path: str) -> bool:
     )
 
 
-def _detect_source() -> str:
+def _detect_source(provider="antigravity") -> str:
+    if provider != "antigravity":
+        from ..discovery import discover_sources
+        candidates = [source for source in discover_sources() if source["provider"] == provider]
+        found = next((source for source in candidates if source["exists"]), None)
+        if found:
+            return found["path"]
+        if candidates:
+            return candidates[0]["path"]
+        return os.getcwd()  # Portable exports can be supplied in the current folder.
     candidates = [
         os.getcwd(),
         os.path.join(os.path.expanduser("~"), ".gemini", "antigravity"),  # Default install path
@@ -84,20 +91,22 @@ def _detect_source() -> str:
 
 def _resolve_paths(args) -> tuple[str, str, str]:
     saved = _load_saved_config()
-    provider = args.provider or os.environ.get("AGY_PROVIDER") or saved.get("provider") or "antigravity"
+    provider = args.provider or os.environ.get("CONVOVAULT_PROVIDER") or os.environ.get("AGY_PROVIDER") or saved.get("provider") or "antigravity"
 
     source_dir = (
         args.source
+        or os.environ.get("CONVOVAULT_SOURCE")
         or os.environ.get("AGY_SOURCE")
-        or saved.get("source")
-        or _detect_source()
+        or (saved.get("source") if saved.get("provider", "antigravity") == provider else None)
+        or _detect_source(provider)
     )
 
     vault_dir = (
         args.vault
+        or os.environ.get("CONVOVAULT_VAULT")
         or os.environ.get("AGY_VAULT")
         or saved.get("vault")
-        or source_dir
+        or os.path.expanduser("~/Documents/ConvoVault")
     )
     return provider, source_dir, vault_dir
 
@@ -106,10 +115,9 @@ def _setup_logging(verbose: bool):
     level = logging.DEBUG if verbose else logging.INFO
     fmt = "%(asctime)s %(levelname)-8s %(name)s: %(message)s"
     datefmt = "%H:%M:%S"
-    import io
     stdout = sys.stdout
-    if hasattr(stdout, 'buffer'):
-        stdout = io.TextIOWrapper(stdout.buffer, encoding='utf-8', errors='replace')
+    if hasattr(stdout, 'reconfigure'):
+        stdout.reconfigure(encoding='utf-8', errors='replace')
     logging.basicConfig(level=level, format=fmt, datefmt=datefmt,
                         handlers=[logging.StreamHandler(stdout)])
     logging.getLogger("urllib3").setLevel(logging.WARNING)
@@ -133,6 +141,9 @@ def handle_export(args):
         max_tool_results_per_turn=args.max_tool_results_per_turn,
         max_tool_output_length=args.max_tool_output_length,
         verbose=args.verbose,
+        note_mode=args.note_mode,
+        create_maps=not args.no_maps,
+        classification_rules=_read_rules(args.rules),
     )
 
     if not os.path.isdir(config.source_dir) and not os.path.isfile(config.source_dir):
@@ -143,62 +154,28 @@ def handle_export(args):
     print(f"Vault    : {config.vault_dir}")
     print(f"Provider : {config.provider}")
 
-    run_export(config)
+    stats = run_export(config)
+    print(json.dumps(stats, ensure_ascii=False, indent=2))
+    if stats['failed'] or not stats['total']:
+        raise SystemExit(1)
 
 
 def handle_watch(args):
+    import time
     provider, source, vault = _resolve_paths(args)
-    config = ExporterConfig(
-        source_dir=source,
-        vault_dir=vault,
-        provider=provider,
-        watch=True,
-        watch_interval=args.interval,
-        force=args.force,
-        debug=args.debug,
-        no_tool_results=args.no_tool_results,
-        max_tool_results_per_turn=args.max_tool_results_per_turn,
-        max_tool_output_length=args.max_tool_output_length,
-        verbose=args.verbose,
-    )
-
-    print(f"Watching source: {config.source_dir} (interval: {config.watch_interval}s)")
-    print(f"Syncing to vault: {config.vault_dir}")
-
-    # Do initial run
-    run_export(config)
-
-    # Load state and provider summaries
-    state = ExportState(config.vault_dir)
-    prov = get_provider(config.provider)
-    if not prov:
-        print(f"[error] Provider '{config.provider}' not found.")
-        sys.exit(1)
-    meta_index = prov.load_metadata_index(config)
-
-    def re_export_callback(conv_id: str):
-        convo = prov.read_conversation(conv_id, config)
-        if not convo or not convo.steps:
-            return
-        export_one(
-            conv_id=conv_id, convo=convo,
-            config=config, meta_index=meta_index,
-            state=state, all_meta=meta_index,
-        )
-        state.save()
-
-    def re_load_pb_callback():
-        nonlocal meta_index
-        meta_index = prov.load_metadata_index(config)
-        run_export(config)
-
-    start_watch(
-        source_dir=config.source_dir,
-        vault_dir=config.vault_dir,
-        on_change=re_export_callback,
-        on_pb_change=re_load_pb_callback,
-        interval=config.watch_interval,
-    )
+    config = ExporterConfig(source_dir=source, vault_dir=vault, provider=provider,
+                            note_mode=args.note_mode, create_maps=not args.no_maps,
+                            classification_rules=_read_rules(args.rules),
+                            no_tool_results=args.no_tool_results,
+                            max_tool_results_per_turn=args.max_tool_results_per_turn,
+                            max_tool_output_length=args.max_tool_output_length)
+    print(f"Watching {source}. Press Ctrl+C to stop.")
+    try:
+        while True:
+            print(json.dumps(run_export(config), ensure_ascii=False))
+            time.sleep(max(5, args.interval))
+    except KeyboardInterrupt:
+        return
 
 
 def handle_providers(args):
@@ -209,37 +186,18 @@ def handle_providers(args):
 
 
 def handle_search(args):
-    provider, source, vault = _resolve_paths(args)
-    query = args.query.lower()
-    print(f"Searching vault at {vault} for '{query}'...")
-    chats_dir = os.path.join(vault, "AI Vault", "Chats")
-    if not os.path.isdir(chats_dir):
-        print("No exported notes directory found.")
-        return
-
-    matches = 0
-    for fname in os.listdir(chats_dir):
-        if not fname.endswith(".md"):
-            continue
-        path = os.path.join(chats_dir, fname)
-        try:
-            with open(path, 'r', encoding='utf-8') as fh:
-                content = fh.read()
-            if query in content.lower():
-                print(f"  [Match] [[{fname[:-3]}]]")
-                matches += 1
-        except Exception:
-            pass
-    print(f"\nFound {matches} matches total.")
+    from ..workspace import search_library
+    _, _, vault = _resolve_paths(args)
+    for entry in search_library(vault, args.query):
+        print(f"{entry['provider']}: {entry['title']}\n  {os.path.join(vault, entry['path'])}")
 
 
 def handle_stats(args):
-    provider, source, vault = _resolve_paths(args)
-    state = ExportState(vault)
-    print("\n--- ConvoVault Sync Statistics ---")
-    print(f"  Obsidian Vault  : {vault}")
-    print(f"  Total Exported  : {len(state.state)} notes")
-    print()
+    from ..workspace import load_library
+    _, _, vault = _resolve_paths(args)
+    library = load_library(vault)
+    print(json.dumps({'vault': vault, 'conversations': len(library['conversations']),
+                      'managed_files': len(library['artifacts'])}, indent=2))
 
 
 def handle_doctor(args):
@@ -286,6 +244,14 @@ def handle_config(args):
         _save_config({"provider": provider, "source": source, "vault": vault})
 
 
+def _read_rules(path):
+    if not path:
+        return None
+    from ..analysis.classification import validate_rules
+    with open(path, encoding="utf-8-sig") as fh:
+        return validate_rules(json.load(fh))
+
+
 def main(argv=None):
     p = argparse.ArgumentParser(prog="convovault", description="Universal AI Conversation Knowledge Vault.")
     subparsers = p.add_subparsers(dest="command", required=True)
@@ -306,6 +272,9 @@ def main(argv=None):
     exp_p.add_argument("--no-tool-results", action="store_true", help="Omit tool result blocks")
     exp_p.add_argument("--max-tool-results-per-turn", type=int, help="Cap tool result blocks per turn")
     exp_p.add_argument("--max-tool-output-length", type=int, help="Cap characters per tool output block")
+    exp_p.add_argument("--note-mode", choices=["conversation", "exchanges", "messages", "both"], default="conversation")
+    exp_p.add_argument("--no-maps", action="store_true", help="Do not generate Canvas maps")
+    exp_p.add_argument("--rules", help="Classification rules JSON file")
 
     # watch
     wat_p = subparsers.add_parser("watch", parents=[gp], help="Start continuous live sync")
@@ -315,6 +284,17 @@ def main(argv=None):
     wat_p.add_argument("--no-tool-results", action="store_true", help="Omit tool result blocks")
     wat_p.add_argument("--max-tool-results-per-turn", type=int, help="Cap tool result blocks")
     wat_p.add_argument("--max-tool-output-length", type=int, help="Cap characters")
+    wat_p.add_argument("--note-mode", choices=["conversation", "exchanges", "messages", "both"], default="conversation")
+    wat_p.add_argument("--no-maps", action="store_true")
+    wat_p.add_argument("--rules", help="Classification rules JSON file")
+
+    gui_p = subparsers.add_parser("gui", help="Open ConvoVault Studio")
+    gui_p.add_argument("--native", action="store_true")
+    gui_p.add_argument("--no-browser", action="store_true")
+    gui_p.add_argument("--port", type=int, default=0)
+    subparsers.add_parser("discover", help="List common local transcript paths and availability")
+    preview_p = subparsers.add_parser("preview", parents=[gp], help="Read and classify without writing notes")
+    preview_p.add_argument("--rules", help="Classification rules JSON file")
 
     # providers
     subparsers.add_parser("providers", help="List registered providers")
@@ -337,9 +317,26 @@ def main(argv=None):
     subparsers.add_parser("version", help="Show version information")
 
     args = p.parse_args(argv)
-    _setup_logging(args.verbose)
+    _setup_logging(getattr(args, 'verbose', False))
 
-    if args.command == "export":
+    if args.command == "gui":
+        from ..gui.server import main as gui_main
+        options = ["--port", str(args.port)]
+        if args.native:
+            options.append("--native")
+        if args.no_browser:
+            options.append("--no-browser")
+        gui_main(options)
+    elif args.command == "discover":
+        from ..discovery import discover_sources, EXPORT_SOURCES
+        print(json.dumps({'local': discover_sources(), 'exports': EXPORT_SOURCES}, ensure_ascii=False, indent=2))
+    elif args.command == "preview":
+        from ..workspace import load_conversations, describe
+        provider, source, vault = _resolve_paths(args)
+        rules = _read_rules(args.rules)
+        conversations, warnings = load_conversations(ExporterConfig(source, vault, provider))
+        print(json.dumps({'conversations': [describe(c, rules) for c in conversations], 'warnings': warnings}, ensure_ascii=False, indent=2))
+    elif args.command == "export":
         handle_export(args)
     elif args.command == "watch":
         handle_watch(args)
