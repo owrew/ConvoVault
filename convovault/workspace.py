@@ -206,6 +206,42 @@ def wikilink(path, label=None):
     return f"[[{clean}|{label}]]"
 
 
+def build_canvas(entries, layout):
+    entries = sorted(entries, key=lambda e: (e["classification"]["primary"], e["key"]))
+    total = len(entries)
+    radius, coordinates = 1, []
+    while len(coordinates) < math.ceil(total / 2):
+        coordinates = [(col, row) for row in range(-radius, radius + 1) for col in range(radius + 1)
+                       if (col / (radius + .5)) ** 2 + (row / (radius + .5)) ** 2 <= 1]
+        if len(coordinates) < math.ceil(total / 2):
+            radius += 1
+    coordinates = sorted(sorted(coordinates, key=lambda p: p[0] ** 2 + p[1] ** 2)[:math.ceil(total / 2)], key=lambda p: (p[1], p[0]))
+    nodes = [{"id": "legend", "type": "text", "text": f"# ConvoVault · {layout.title()} map\n{total} conversations. Colors represent categories.\nOpen a card to read its note. Brain is a stylized two-hemisphere layout.", "x": -400, "y": -radius * 250 - 400 if layout == "brain" else -350, "width": 800, "height": 150}]
+    edges, hubs = [], {}
+    categories = sorted(set(e["classification"]["primary"] for e in entries))
+    for i, category in enumerate(categories):
+        hubs[category] = "category-" + digest(category)[:12]
+        nodes.append({"id": hubs[category], "type": "text", "text": "## " + category,
+                      "x": (radius + 3) * 420 if layout == "brain" else i * 760,
+                      "y": i * 150 - len(categories) * 75 if layout == "brain" else -150,
+                      "width": 300, "height": 100,
+                      "color": next(e["classification"]["color"] for e in entries if e["classification"]["primary"] == category)})
+    for i, entry in enumerate(entries):
+        if layout == "brain":
+            side = -1 if i % 2 == 0 else 1
+            col, row = coordinates[i // 2]
+            x = 280 + col * 420 if side == 1 else -620 - col * 420
+            y = row * 250
+        else:
+            category_index = categories.index(entry["classification"]["primary"])
+            siblings = [e for e in entries[:i] if e["classification"]["primary"] == entry["classification"]["primary"]]
+            x, y = category_index * 760, len(siblings) * 250
+        nid = "chat-" + digest(entry["key"])[:16]
+        nodes.append({"id": nid, "type": "file", "file": entry["path"], "x": int(x), "y": int(y),
+                      "width": 340, "height": 190, "color": entry["classification"]["color"]})
+        edges.append({"id": "edge-" + nid, "fromNode": hubs[entry["classification"]["primary"]], "toNode": nid,
+                      "color": entry["classification"]["color"], "toEnd": "none"})
+    return {"nodes": nodes, "edges": edges}
 
 
 
