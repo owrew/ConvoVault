@@ -128,7 +128,7 @@ def _format_tool_call(tool_call: ToolCall, max_len: Optional[int] = None) -> str
             val_str = val_str[:max_len] + '…'
         # Multiline values go into a nested code block
         if '\n' in val_str and len(val_str) > 80:
-            arg_lines.append(f"  - **{k}:**\n    ```\n    {val_str[:2000]}\n    ```")
+            arg_lines.append(f"  - **{k}:**\n    ```\n    {val_str}\n    ```")
         else:
             arg_lines.append(f"  - **{k}:** `{val_str}`")
 
@@ -394,7 +394,7 @@ code_languages:
         f"| **Last Viewed** | {last_viewed} |\n"
         f"| **Duration** | {duration} |\n"
         f"| **Total Steps** | {step_count} |\n"
-        "| **Source** | Antigravity (Google) |\n"
+        f"| **Source** | {transcript.provider} |\n"
     )
 
     # ── Conversation Statistics ───────────────────────────────────────────────
@@ -546,6 +546,6 @@ code_languages:
 
     if transcript.source_file:
         body.append(f"\n*Source:* `{transcript.source_file}`")
-    body.append(f"*Exported by Antigravity Obsidian Exporter v2 · Conversation ID: `{conv_id}`*\n")
+    body.append(f"*Exported by ConvoVault 3 · Conversation ID: `{conv_id}`*\n")
 
     return frontmatter + "\n\n" + "\n".join(body) + "\n"
