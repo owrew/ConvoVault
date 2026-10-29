@@ -43,6 +43,12 @@ def main():
                 failures += 1
                 
     print(f"\nTest Summary: {passed} passed, {failures} failed")
+    import unittest
+    from tests import test_studio
+    suite = unittest.defaultTestLoader.loadTestsFromModule(test_studio)
+    result = unittest.TextTestRunner(verbosity=2).run(suite)
+    failures += len(result.failures) + len(result.errors)
+    print(f"Combined checks: {passed + result.testsRun} tests, {failures} failures")
     if failures > 0:
         sys.exit(1)
     else:
