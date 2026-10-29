@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="310" viewBox="0 0 1280 310" role="img" aria-labelledby="title desc">
+<title id="title">ConvoVault Studio</title><desc id="desc">Your AI conversations, connected. Local Markdown and Obsidian Canvas library.</desc>
+<rect width="1280" height="310" rx="24" fill="#eef2f8"/>
+<rect x="58" y="58" width="60" height="64" rx="17" fill="#526cbe"/>
+<text x="70" y="99" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="37" fill="white" letter-spacing="-4">cv</text>
+<text x="143" y="88" font-family="Segoe UI,Arial,sans-serif" font-size="27" font-weight="650" fill="#203451">ConvoVault</text>
+<text x="144" y="112" font-family="Segoe UI,Arial,sans-serif" font-size="15" fill="#61738c">Studio / 3.0</text>
+<text x="58" y="191" font-family="Segoe UI,Arial,sans-serif" font-size="45" font-weight="650" fill="#203451">Your conversations, connected.</text>
+<text x="60" y="232" font-family="Segoe UI,Arial,sans-serif" font-size="19" fill="#5e7089">A local AI conversation library for Obsidian.</text>
+<g transform="translate(936 48)" fill="none" stroke="#ccd6e6" stroke-width="1.5">
+<path d="M122 208C91 223 65 204 38 188C9 174 7 145 17 119C5 89 26 71 44 47C64 12 98 20 114 42C130 64 126 95 126 118Z"/>
+<path d="M150 208C181 223 207 204 234 188C263 174 265 145 255 119C267 89 246 71 228 47C208 12 174 20 158 42C142 64 146 95 146 118Z"/>
+<path d="M40 96L78 65L112 106L91 155L42 175M78 65L91 155M167 61L215 92L232 145L188 180L160 127L215 92M160 127L167 61"/>
+</g>
+<g stroke="white" stroke-width="3">
+<circle cx="976" cy="144" r="7" fill="#769dff"/><circle cx="1014" cy="113" r="9" fill="#bd8ee8"/>
+<circle cx="1048" cy="154" r="6" fill="#58bbad"/><circle cx="1027" cy="203" r="8" fill="#e6b65b"/>
+<circle cx="978" cy="223" r="6" fill="#df879b"/><circle cx="1103" cy="109" r="7" fill="#769dff"/>
+<circle cx="1151" cy="140" r="8" fill="#58bbad"/><circle cx="1168" cy="193" r="6" fill="#bd8ee8"/>
+<circle cx="1124" cy="228" r="8" fill="#e6b65b"/><circle cx="1096" cy="175" r="6" fill="#df879b"/>
+</g></svg>
