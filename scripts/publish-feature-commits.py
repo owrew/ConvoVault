@@ -63,6 +63,16 @@ PLAN = [
 ]
 
 
+# Follow-up validation fixes use the same single file and the same non-force gates.
+FINALIZE_BASE = "55af9bd47668fb00128a14b9dfab36bbdd9e076f"
+FINALIZE_EXPECTED = {'tests/test_studio.py': '3cf9a331e75c89af61b6e66b412deea7add3a8eaf6759afceee9bf1c4b94841b', 'README.md': 'cfe910861d8dd2c9b9c8628f110c6415a28ae624cd837250b9f82cdca9c44d73', 'docs/images/note-modes.svg': 'bbe1978c93e7efe528e9256b7589bb0607e1cc365b103044d330ac817753008e', 'docs/images/knowledge-graph.svg': 'ef4278abda3fc18cbae7afb76893675fc8f212d4552dae572cc09f108e3e9599', 'docs/images/architecture.svg': 'c545a88121f2bb7e01d9a63d5b04a76622144ccf51f39b085a86a78f1c6c6f4f'}
+FINALIZE_PLAN = [
+    ("test(cli): patch explicit module objects on Python 3.9 and 3.10", ["tests/test_studio.py"], None),
+    ("docs(readme): render diagrams as local SVGs and stabilize navigation", ["README.md", "docs/images/note-modes.svg", "docs/images/knowledge-graph.svg", "docs/images/architecture.svg"], None),
+    ("chore(release): automate the post-push validation fixes in the batch file", [SELF], None),
+]
+
+
 def command(args, *, input_bytes=None, capture=True, check=True):
     environment = {**os.environ, "GIT_TERMINAL_PROMPT": "0", "GCM_INTERACTIVE": "Never"}
     return subprocess.run(args, cwd=ROOT, env=environment, input=input_bytes,
@@ -127,10 +137,14 @@ def stage(path, variant, final):
 
 
 def main():
+    global BASE, PLAN, EXPECTED
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--apply", action="store_true", help="Create the reviewed feature commits")
     parser.add_argument("--push", action="store_true", help="Push after all checks and commits succeed")
+    parser.add_argument("--finalize", action="store_true", help="Apply the separately reviewed live-validation fixes")
     args = parser.parse_args()
+    if args.finalize:
+        BASE, PLAN, EXPECTED = FINALIZE_BASE, FINALIZE_PLAN, FINALIZE_EXPECTED
     if args.push and not args.apply:
         parser.error("--push requires --apply")
     print(f"Reviewed plan: {len(PLAN)} commits on {BRANCH}, base {BASE[:12]}", flush=True)
@@ -170,7 +184,8 @@ def main():
     else:
         print("flake8 is not installed; the test and compilation gates still ran.")
     check_files()
-    journal_path = ROOT / ".git" / "convovault-publish-journal.json"
+    journal_name = "convovault-publish-finalize-journal.json" if args.finalize else "convovault-publish-journal.json"
+    journal_path = ROOT / ".git" / journal_name
     journal = {"base": BASE, "branch": BRANCH, "started_at": datetime.now(timezone.utc).isoformat(), "commits": [], "pushed": False}
 
     def save_journal():
