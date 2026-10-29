@@ -381,3 +381,19 @@ def export_library(config):
     return stats
 
 
+def search_library(vault, query="", category="", provider=""):
+    library = load_library(vault)
+    matches = []
+    terms = query.casefold().split()
+    for entry in library["conversations"].values():
+        if category and entry["classification"]["primary"] != category or provider and entry["provider"] != provider:
+            continue
+        text = entry["title"] + "\n" + entry.get("preview", "")
+        if terms:
+            for relative in [entry["path"]] + entry.get("children", []):
+                path = safe_relative(vault, relative)
+                if path.exists():
+                    text += "\n" + path.read_text(encoding="utf-8")
+        if all(term in text.casefold() for term in terms):
+            matches.append(entry)
+    return sorted(matches, key=lambda e: e.get("updated", ""), reverse=True)
