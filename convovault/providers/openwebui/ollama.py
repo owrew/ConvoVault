@@ -62,7 +62,7 @@ def read_open_webui_db(db_path: str) -> List[ConversationTranscript]:
             if not steps:
                 continue
 
-            ts = ConversationTranscript(conv_id=conv_id, steps=steps, source_file=db_path)
+            ts = ConversationTranscript(conv_id=conv_id, provider="openwebui", steps=steps, source_file=db_path)
             ts._ollama_title = title
             transcripts.append(ts)
         conn.close()
@@ -143,7 +143,7 @@ def read_lm_studio_export(folder: str) -> List[ConversationTranscript]:
         if not steps:
             continue
 
-        ts = ConversationTranscript(conv_id=conv_id, steps=steps, source_file=fpath)
+        ts = ConversationTranscript(conv_id=conv_id, provider="ollama", steps=steps, source_file=fpath)
         ts._ollama_title = title
         transcripts.append(ts)
 
